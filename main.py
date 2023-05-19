@@ -1,23 +1,35 @@
 import random
-
-from cardUI import display, test
 import time
 
-suits = ["club", "diamond", "heart", "spade"]
-points = list(range(1, 14))
+from cardUI import display, start
 
 
-# time.sleep(2)
-# for i in range(0, 65):
-#     display([f"{random.choice(suits)}-{random.choice(points)}" for _ in range(i)])
-#     time.sleep(0.15)
-# time.sleep(50)
-def func(para: list):
-    # para[1], para[0] = para[0], para[2]
-    # return para
-    return sorted(para, key=lambda x: int(x))
+def new_card():
+    return [[random.randint(2, 14), random.randint(0, 3)] for _ in range(30)]
 
 
-time.sleep(5)
-test("1-1", func)
-time.sleep(10)
+def sort_all(cards: list):
+    return sorted(cards, key=lambda x: x[0] * 4 + x[1])
+
+
+def search_all(cards: list, target_card: list):
+    cards = sort_all(cards)
+    result = []
+    i = 0
+    while i < len(cards) - 1:
+        if cards[i] == target_card[0] and cards[i + 1] == target_card[1]:
+            result.append([cards[i], cards[i + 1]])
+            i += 1
+        i += 1
+    return result
+
+
+time.sleep(2)
+for i in range(1, 5):
+    a = []
+    for j in range(52):
+        a.append([random.randint(2, 14), random.randint(0, 3)])
+        display(i, a)
+time.sleep(1)
+
+start(new_card, sort_all, search_all, [[3, 1], [3, 2]])
