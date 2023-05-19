@@ -173,12 +173,18 @@ class _DISP:
         if len(self.current_cards) == 0:
             print("目前没有需要排序的牌")
             return None
+        if self.sort_card_func is None:
+            print("没有实现排序功能")
+            return None
         self.current_cards = self.sort_card_func(self.current_cards)
         self(1, self.current_cards)
 
     def _search_cards(self):
         if len(self.current_cards) == 0:
             print("目前没有需要搜索的牌")
+            return None
+        if self.search_card_func is None:
+            print("没有实现查找功能")
             return None
         if self.target_card is None:
             self.target_card = [list(t) for t in zip([random.randint(1, 14)] * 2, random.sample(range(4), k=2))]
@@ -205,7 +211,7 @@ class _DISP:
             elif 350 < event.y < 380:
                 self._search_cards()
 
-    def start(self, new_card, sort_card, search_card, target_card=None):
+    def start(self, new_card, sort_card=None, search_card=None, target_card=None):
         self.started = True
         self.target_card = target_card
 
