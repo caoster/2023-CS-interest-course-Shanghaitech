@@ -12,6 +12,8 @@ def _upd_card(self: _DISP, cards):
     if self.on_board is not None:
         for i in self.on_board:
             self.canvas.delete(f"card_{i[0]}_{i[1]}")
+    if cards is None:
+        return
     for i in cards:
         self.canvas.delete(f"card_{i[0]}_{i[1]}")
     pos = _linspace(300, 500, len(cards))
@@ -27,6 +29,10 @@ def _game_logic(self: _DISP):
         self.player1, self.player2 = self.new_card_func()
         self.player1.sort()
         self.player2.sort()
+
+        for i in range(2, 15):
+            for j in range(0, 4):
+                self.canvas.delete(f"card_{i}_{j}")
 
         pos = _linspace(120, 700, len(self.player1))
         for idx, card in enumerate(self.player1):
@@ -50,6 +56,7 @@ def _game_logic(self: _DISP):
             take = self.player_2_agent(deepcopy(self.player2), deepcopy(self.player1), deepcopy(self.on_board))
 
         if take is None:
+            _upd_card(self, None)
             self.on_board = None
         else:
             if self.on_board is None or first_is_larger(take, self.on_board):
@@ -59,14 +66,14 @@ def _game_logic(self: _DISP):
                             print(f"{i}不在你的手牌中")
                             exit(1)
                         self.player1.remove(i)
-                        _upd_card(self, take)
+                    _upd_card(self, take)
                 else:
                     for i in take:
                         if i not in self.player2:
                             print(f"{i}不在你的手牌中")
                             exit(1)
                         self.player2.remove(i)
-                        _upd_card(self, take)
+                    _upd_card(self, take)
 
                 self.on_board = take
             else:
@@ -77,15 +84,15 @@ def _game_logic(self: _DISP):
         if len(self.player2) == 0:
             print("对方获胜!")
             self.gameInit = False
-            self.root.update()
-            time.sleep(1)
-            input("按回车进入下一局")
+            print("即将开始下一局")
+            self.root.after(1000, _game_logic, display)
+            return
         elif len(self.player1) == 0:
             print("我方获胜!")
             self.gameInit = False
-            self.root.update()
-            time.sleep(1)
-            input("按回车进入下一局")
+            print("即将开始下一局")
+            self.root.after(1000, _game_logic, display)
+            return
 
     self.root.after(100, _game_logic, display)
 
