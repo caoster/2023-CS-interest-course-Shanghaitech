@@ -1,9 +1,25 @@
+import time
+
 from cardUI import _DISP, display, _linspace, _get_card_image_path
 from copy import deepcopy
 
 
 def cardUI_help():
     pass
+
+
+def _upd_card(self: _DISP, cards):
+    if self.on_board is not None:
+        for i in self.on_board:
+            self.canvas.delete(f"card_{i[0]}_{i[1]}")
+    for i in cards:
+        self.canvas.delete(f"card_{i[0]}_{i[1]}")
+    pos = _linspace(300, 500, len(cards))
+    for idx, card in enumerate(cards):
+        self.canvas.create_image(pos[idx], 160,
+                                 image=self.textures[_get_card_image_path(card)],
+                                 tags=f"card_{card[0]}_{card[1]}",
+                                 anchor="nw")
 
 
 def _game_logic(self: _DISP):
@@ -43,14 +59,14 @@ def _game_logic(self: _DISP):
                             print(f"{i}不在你的手牌中")
                             exit(1)
                         self.player1.remove(i)
-                        self.canvas.delete(f"card_{i[0]}_{i[1]}")
+                        _upd_card(self, take)
                 else:
                     for i in take:
                         if i not in self.player2:
                             print(f"{i}不在你的手牌中")
                             exit(1)
                         self.player2.remove(i)
-                        self.canvas.delete(f"card_{i[0]}_{i[1]}")
+                        _upd_card(self, take)
 
                 self.on_board = take
             else:
@@ -62,11 +78,13 @@ def _game_logic(self: _DISP):
             print("对方获胜!")
             self.gameInit = False
             self.root.update()
+            time.sleep(1)
             input("按回车进入下一局")
         elif len(self.player1) == 0:
             print("我方获胜!")
             self.gameInit = False
             self.root.update()
+            time.sleep(1)
             input("按回车进入下一局")
 
     self.root.after(100, _game_logic, display)
