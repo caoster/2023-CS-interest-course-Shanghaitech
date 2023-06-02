@@ -2,7 +2,7 @@ import random
 import time
 
 from cardUI import display, start
-from cardUI_extension import game, cardUI_help
+from cardUI_extension import game, cardUI_help, first_is_larger
 
 NUM_CARDS = 20
 
@@ -13,8 +13,15 @@ def new_card():
 
 
 def agent(my_card, opponent, on_board):
-    pass
+    if on_board is None:
+        return [my_card[0]]
+    my_card.sort()
+    if len(on_board) == 1:
+        for i in my_card:
+            if i[0] > on_board[0][0]:
+                return [i]
+        return None
 
 
-game(new_card, None, None)
+game(new_card, agent, None)
 time.sleep(10)

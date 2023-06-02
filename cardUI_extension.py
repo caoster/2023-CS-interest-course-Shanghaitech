@@ -1,4 +1,5 @@
 from cardUI import _DISP, display, _linspace, _get_card_image_path
+from copy import deepcopy
 
 
 def cardUI_help():
@@ -8,6 +9,8 @@ def cardUI_help():
 def _game_logic(self: _DISP):
     if self.gameInit is False:
         self.player1, self.player2 = self.new_card_func()
+        self.player1.sort()
+        self.player2.sort()
 
         pos = _linspace(120, 700, len(self.player1))
         for idx, card in enumerate(self.player1):
@@ -26,9 +29,9 @@ def _game_logic(self: _DISP):
     else:
         # Take a step
         if self.p1_turn == 1:
-            take = self.player_1_agent(self.player1, self.player2, self.on_board)
+            take = self.player_1_agent(deepcopy(self.player1), deepcopy(self.player2), deepcopy(self.on_board))
         else:
-            take = self.player_2_agent(self.player2, self.player1, self.on_board)
+            take = self.player_2_agent(deepcopy(self.player2), deepcopy(self.player1), deepcopy(self.on_board))
 
         if take is None:
             self.on_board = None
@@ -40,12 +43,14 @@ def _game_logic(self: _DISP):
                             print(f"{i}不在你的手牌中")
                             exit(1)
                         self.player1.remove(i)
+                        self.canvas.delete(f"card_{i[0]}_{i[1]}")
                 else:
                     for i in take:
                         if i not in self.player2:
                             print(f"{i}不在你的手牌中")
                             exit(1)
                         self.player2.remove(i)
+                        self.canvas.delete(f"card_{i[0]}_{i[1]}")
 
                 self.on_board = take
             else:
@@ -64,7 +69,7 @@ def _game_logic(self: _DISP):
             self.root.update()
             input("按回车进入下一局")
 
-    self.root.after(0, _game_logic, display)
+    self.root.after(100, _game_logic, display)
 
 
 def _game(self: _DISP, new_card, your, opponent=None):
