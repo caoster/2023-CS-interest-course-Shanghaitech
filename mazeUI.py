@@ -1,6 +1,6 @@
 import tkinter
 from enum import Enum
-from tkinter import Tk, Frame, Canvas
+from tkinter import Tk, Canvas
 
 
 class _PixelType(Enum):
@@ -68,6 +68,7 @@ class _Maze:
         self.disp: _DISP = _DISP(self)
         self.init_disp()
 
+    def start(self):
         self.disp.start()
 
     def explore(self, x: int, y: int):
