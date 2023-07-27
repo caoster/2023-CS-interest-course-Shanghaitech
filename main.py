@@ -75,7 +75,7 @@ class _Maze:
             result["right"] = self._maze[x][y + 1]
         return result
 
-    def solve(self, path: [tuple[int, int]]):
+    def submit(self, path: [tuple[int, int]]):
         if path is None:
             return False  # TODO: No solution?
         if path[0] != self._start or path[-1] != self._exit:
@@ -83,10 +83,12 @@ class _Maze:
         for idx in range(len(path)):
             a = path[idx]
             b = path[idx + 1]
+            if not (self._mask[a[0]][a[1]] and self._mask[b[0]][b[1]]):
+                return False  # Explore before commit
             if not (0 <= a[0] < self._size[0] and 0 <= a[1] < self._size[1] and 0 <= b[0] < self._size[0] and 0 <= b[1] < self._size[1]):
-                return False
+                return False  # Check in-range
             if abs(a[0] - b[0]) + abs(a[1] - b[1]) != 1:
-                return False
+                return False  # Check connectivity
         return True
 
     def __str__(self):
