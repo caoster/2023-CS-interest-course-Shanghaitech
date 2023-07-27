@@ -35,6 +35,7 @@ class _Pixel:
 
 class _Maze:
     def __init__(self):
+        self._steps = 0
         self._size = (10, 8)
         self._maze = [[_Pixel(i, j, _PixelType.EMPTY) for j in range(self._size[0])] for i in range(self._size[1])]
         self._mask = [[False for _ in range(self._size[0])] for _ in range(self._size[1])]
@@ -58,23 +59,36 @@ class _Maze:
                 elif hardcoded_maze[i][j] == 2:
                     self._maze[i][j].pixel_type = _PixelType.START
                     self._start = (i, j)
+                    self._mask[i][j] = True
                 elif hardcoded_maze[i][j] == 3:
                     self._maze[i][j].pixel_type = _PixelType.EXIT
                     self._exit = (i, j)
+                    self._mask[i][j] = True
+
+        self.disp: _DISP = _DISP(self)
+        self.init_disp()
+
+        self.disp.start()
 
     def explore(self, x: int, y: int):
-        if self._mask[x][y]:
-            print(f"Warning: 你多次访问了({x}, {y})！")
-        self._mask[x][y] = True
+        self._steps += 1
         result = {"up": _PixelType.BOUNDARY, "down": _PixelType.BOUNDARY, "left": _PixelType.BOUNDARY, "right": _PixelType.BOUNDARY}
         if x > 0:
             result["up"] = self._maze[x - 1][y]
+            self._mask[x - 1][y] = True
+            self.disp.update(x - 1, y, self._maze[x - 1][y].pixel_type)
         if x < self._size[0] - 1:
             result["down"] = self._maze[x + 1][y]
+            self._mask[x + 1][y] = True
+            self.disp.update(x + 1, y, self._maze[x + 1][y].pixel_type)
         if y > 0:
             result["left"] = self._maze[x][y - 1]
+            self._mask[x][y - 1] = True
+            self.disp.update(x, y - 1, self._maze[x][y - 1].pixel_type)
         if y < self._size[1] - 1:
             result["right"] = self._maze[x][y + 1]
+            self._mask[x][y + 1] = True
+            self.disp.update(x, y + 1, self._maze[x][y + 1].pixel_type)
         return result
 
     def submit(self, path: [tuple[int, int]]):
@@ -92,6 +106,12 @@ class _Maze:
             if abs(a[0] - b[0]) + abs(a[1] - b[1]) != 1:
                 return False  # Check connectivity
         return True
+
+    def init_disp(self):
+        for i in range(self._size[1]):
+            for j in range(self._size[0]):
+                if self._mask[i][j]:
+                    self.disp.update(i, j, self._maze[i][j].pixel_type)
 
     def __str__(self):
         display = ""
@@ -112,12 +132,8 @@ class _Maze:
         return display
 
 
-a = _Maze()
-print(a)
-
-
 class _DISP:
-    def __init__(self):
+    def __init__(self, maze: _Maze):
         print("v<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         print("v  Welcome to Python class!  ^")
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>^")
@@ -130,20 +146,33 @@ class _DISP:
         self.maze_canvas.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
 
         self.cells = []
+        side = 15
         for ix in range(50):
+            self.cells.append([])
             for iy in range(30):
-                xpad, ypad = 0, 0
-                side = 15
-                x, y = xpad + ix * side, ypad + iy * side
-                if ix == 49 or iy == 29:
-                    rect = self.maze_canvas.create_rectangle(x, y, x + side,
-                                                             y + side, fill="#ccc")
-                else:
-                    rect = self.maze_canvas.create_rectangle(x, y, x + side,
-                                                             y + side, fill="#666")
-                self.cells.append(rect)
+                x, y = ix * side, iy * side
+                rect = self.maze_canvas.create_rectangle(x, y, x + side,
+                                                         y + side, fill="gray55")
+                self.cells[-1].append(rect)
 
+        self.maze: _Maze = maze
+
+    def start(self):
         self.root.mainloop()
 
+    def update(self, x: int, y: int, scheme: _PixelType):
+        if scheme == _PixelType.UNKNOWN:
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray55")
+        elif scheme == _PixelType.BOUNDARY:
+            raise
+        elif scheme == _PixelType.EMPTY:
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray85")
+        elif scheme == _PixelType.WALL:
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray15")
+        elif scheme == _PixelType.START:
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="gold")
+        elif scheme == _PixelType.EXIT:
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="coral")
 
-b = _DISP()
+
+_maze = _Maze()
