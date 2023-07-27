@@ -1,4 +1,6 @@
+import tkinter
 from enum import Enum
+from tkinter import Tk, Frame, Canvas
 
 
 class _PixelType(Enum):
@@ -112,3 +114,36 @@ class _Maze:
 
 a = _Maze()
 print(a)
+
+
+class _DISP:
+    def __init__(self):
+        print("v<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+        print("v  Welcome to Python class!  ^")
+        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>^")
+        self.root = Tk(className="Maze")
+        self.root.resizable(False, False)
+        # self.root.bind("<Escape>", lambda _: self.root.destroy())
+        self.root.geometry("800x450")
+        self.maze_canvas = Canvas(self.root, width=800, height=450, background="#000")
+        self.maze_canvas.pack()
+        self.maze_canvas.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
+
+        self.cells = []
+        for ix in range(50):
+            for iy in range(30):
+                xpad, ypad = 0, 0
+                side = 15
+                x, y = xpad + ix * side, ypad + iy * side
+                if ix == 49 or iy == 29:
+                    rect = self.maze_canvas.create_rectangle(x, y, x + side,
+                                                             y + side, fill="#ccc")
+                else:
+                    rect = self.maze_canvas.create_rectangle(x, y, x + side,
+                                                             y + side, fill="#666")
+                self.cells.append(rect)
+
+        self.root.mainloop()
+
+
+b = _DISP()
