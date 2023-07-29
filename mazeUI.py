@@ -37,9 +37,9 @@ class _Pixel:
 class Maze:
     def __init__(self):
         self._steps = 0
-        self._size = (10, 8)
-        self._maze = [[_Pixel(i, j, _PixelType.EMPTY) for j in range(self._size[0])] for i in range(self._size[1])]
-        self._mask = [[False for _ in range(self._size[0])] for _ in range(self._size[1])]
+        self._size = (8, 10)
+        self._maze = [[_Pixel(i, j, _PixelType.EMPTY) for j in range(self._size[1])] for i in range(self._size[0])]
+        self._mask = [[False for _ in range(self._size[1])] for _ in range(self._size[0])]
         self._start = (-1, -1)
         self._exit = (-1, -1)
         # TODO: remove this
@@ -53,8 +53,8 @@ class Maze:
             [0, 1, 0, 1, 1, 1, 1, 0, 1, 0],
             [0, 1, 0, 0, 0, 0, 0, 0, 1, 3]
         ]
-        for i in range(self._size[1]):
-            for j in range(self._size[0]):
+        for i in range(self._size[0]):
+            for j in range(self._size[1]):
                 if hardcoded_maze[i][j] == 1:
                     self._maze[i][j].pixel_type = _PixelType.WALL
                 elif hardcoded_maze[i][j] == 2:
@@ -75,23 +75,23 @@ class Maze:
         self._disp.start()
 
     def explore(self, x: int, y: int):
+        assert self._mask[x][y]
         self._steps += 1
-        result = {"up": _PixelType.BOUNDARY, "down": _PixelType.BOUNDARY, "left": _PixelType.BOUNDARY,
-                  "right": _PixelType.BOUNDARY}
+        result = {}
         if x > 0:
-            result["up"] = self._maze[x - 1][y]
+            result[(x - 1, y)] = self._maze[x - 1][y].pixel_type
             self._mask[x - 1][y] = True
             self._disp.update(x - 1, y, self._maze[x - 1][y].pixel_type)
         if x < self._size[0] - 1:
-            result["down"] = self._maze[x + 1][y]
+            result[(x + 1, y)] = self._maze[x + 1][y].pixel_type
             self._mask[x + 1][y] = True
             self._disp.update(x + 1, y, self._maze[x + 1][y].pixel_type)
         if y > 0:
-            result["left"] = self._maze[x][y - 1]
+            result[(x, y - 1)] = self._maze[x][y - 1].pixel_type
             self._mask[x][y - 1] = True
             self._disp.update(x, y - 1, self._maze[x][y - 1].pixel_type)
         if y < self._size[1] - 1:
-            result["right"] = self._maze[x][y + 1]
+            result[(x, y + 1)] = self._maze[x][y + 1].pixel_type
             self._mask[x][y + 1] = True
             self._disp.update(x, y + 1, self._maze[x][y + 1].pixel_type)
         return result
@@ -114,8 +114,8 @@ class Maze:
         return True
 
     def _init_disp(self):
-        for i in range(self._size[1]):
-            for j in range(self._size[0]):
+        for i in range(self._size[0]):
+            for j in range(self._size[1]):
                 if self._mask[i][j]:
                     self._disp.update(i, j, self._maze[i][j].pixel_type)
 
