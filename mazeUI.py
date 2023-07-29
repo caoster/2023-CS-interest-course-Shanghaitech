@@ -1,3 +1,4 @@
+import threading
 import tkinter
 from enum import Enum
 from tkinter import Tk, Canvas
@@ -33,7 +34,7 @@ class _Pixel:
         return f"({self._pixel_type.name}, {self._location[0]}, {self._location[1]})"
 
 
-class _Maze:
+class Maze:
     def __init__(self):
         self._steps = 0
         self._size = (10, 8)
@@ -65,31 +66,34 @@ class _Maze:
                     self._exit = (i, j)
                     self._mask[i][j] = True
 
-        self.disp: _DISP = _DISP(self)
-        self.init_disp()
+        self._disp: _DISP = _DISP(self)
+        self._init_disp()
 
-    def start(self):
-        self.disp.start()
+    def start(self, strategy: callable):
+        timer = threading.Timer(interval=1, function=strategy, args=[self])
+        timer.start()
+        self._disp.start()
 
     def explore(self, x: int, y: int):
         self._steps += 1
-        result = {"up": _PixelType.BOUNDARY, "down": _PixelType.BOUNDARY, "left": _PixelType.BOUNDARY, "right": _PixelType.BOUNDARY}
+        result = {"up": _PixelType.BOUNDARY, "down": _PixelType.BOUNDARY, "left": _PixelType.BOUNDARY,
+                  "right": _PixelType.BOUNDARY}
         if x > 0:
             result["up"] = self._maze[x - 1][y]
             self._mask[x - 1][y] = True
-            self.disp.update(x - 1, y, self._maze[x - 1][y].pixel_type)
+            self._disp.update(x - 1, y, self._maze[x - 1][y].pixel_type)
         if x < self._size[0] - 1:
             result["down"] = self._maze[x + 1][y]
             self._mask[x + 1][y] = True
-            self.disp.update(x + 1, y, self._maze[x + 1][y].pixel_type)
+            self._disp.update(x + 1, y, self._maze[x + 1][y].pixel_type)
         if y > 0:
             result["left"] = self._maze[x][y - 1]
             self._mask[x][y - 1] = True
-            self.disp.update(x, y - 1, self._maze[x][y - 1].pixel_type)
+            self._disp.update(x, y - 1, self._maze[x][y - 1].pixel_type)
         if y < self._size[1] - 1:
             result["right"] = self._maze[x][y + 1]
             self._mask[x][y + 1] = True
-            self.disp.update(x, y + 1, self._maze[x][y + 1].pixel_type)
+            self._disp.update(x, y + 1, self._maze[x][y + 1].pixel_type)
         return result
 
     def submit(self, path: [tuple[int, int]]):
@@ -102,17 +106,18 @@ class _Maze:
             b = path[idx + 1]
             if not (self._mask[a[0]][a[1]] and self._mask[b[0]][b[1]]):
                 return False  # Explore before commit
-            if not (0 <= a[0] < self._size[0] and 0 <= a[1] < self._size[1] and 0 <= b[0] < self._size[0] and 0 <= b[1] < self._size[1]):
+            if not (0 <= a[0] < self._size[0] and 0 <= a[1] < self._size[1] and 0 <= b[0] < self._size[0] and 0 <= b[
+                1] < self._size[1]):
                 return False  # Check in-range
             if abs(a[0] - b[0]) + abs(a[1] - b[1]) != 1:
                 return False  # Check connectivity
         return True
 
-    def init_disp(self):
+    def _init_disp(self):
         for i in range(self._size[1]):
             for j in range(self._size[0]):
                 if self._mask[i][j]:
-                    self.disp.update(i, j, self._maze[i][j].pixel_type)
+                    self._disp.update(i, j, self._maze[i][j].pixel_type)
 
     def __str__(self):
         display = ""
@@ -132,9 +137,13 @@ class _Maze:
             display += "|\n"
         return display
 
+    @property
+    def size(self):
+        return self._size
+
 
 class _DISP:
-    def __init__(self, maze: _Maze):
+    def __init__(self, maze: Maze):
         print("v<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
         print("v  Welcome to Python class!  ^")
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>^")
@@ -156,7 +165,7 @@ class _DISP:
                                                          y + side, fill="gray55")
                 self.cells[-1].append(rect)
 
-        self.maze: _Maze = maze
+        self.maze: Maze = maze
 
     def start(self):
         self.root.mainloop()
@@ -176,4 +185,4 @@ class _DISP:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="coral")
 
 
-_maze = _Maze()
+_maze = Maze()
