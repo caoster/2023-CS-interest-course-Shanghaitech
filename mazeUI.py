@@ -1,7 +1,15 @@
 import threading
+import time
 import tkinter
 from enum import Enum
 from tkinter import Tk, Canvas
+
+WAIT = True
+
+
+def _optional_sleep():
+    if WAIT:
+        time.sleep(0.1)
 
 
 class PixelType(Enum):
@@ -11,6 +19,7 @@ class PixelType(Enum):
     WALL = 1
     START = 2
     EXIT = 3
+    PATH = 4
 
 
 class _Pixel:
@@ -37,6 +46,7 @@ class _Pixel:
 class Maze:
     def __init__(self):
         self._steps = 0
+        self._path_len = 0
         self._size = (8, 10)
         self._maze = [[_Pixel(i, j, PixelType.EMPTY) for j in range(self._size[1])] for i in range(self._size[0])]
         self._mask = [[False for _ in range(self._size[1])] for _ in range(self._size[0])]
@@ -79,6 +89,7 @@ class Maze:
         self._disp.start()
 
     def explore(self, x: int, y: int):
+        _optional_sleep()
         assert self._mask[x][y], "你只能探索可见区域"
         self._steps += 1
         self._disp.update_num(self._steps)
@@ -119,6 +130,11 @@ class Maze:
                      self._maze[b[0]][b[1]].pixel_type == PixelType.EMPTY) or
                     (self._maze[b[0]][b[1]].pixel_type == PixelType.EXIT)):
                 return False  # Empty space
+
+            if self._maze[a[0]][a[1]].pixel_type == PixelType.EMPTY:
+                self._path_len += 1
+                self._disp.update(a[0], a[1], PixelType.PATH)
+                _optional_sleep()
         return True
 
     def _init_disp(self):
@@ -193,6 +209,8 @@ class _DISP:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gold")
         elif scheme == PixelType.EXIT:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="coral")
+        elif scheme == PixelType.PATH:
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="green")
 
     def update_num(self, num: int):
         self.maze_canvas.itemconfigure(self.score, text=num)

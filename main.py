@@ -9,7 +9,6 @@ def strategy(maze: Maze):
     for i in range(x):
         for j in range(y):
             print(maze.explore(i, j))
-            time.sleep(0.1)
     print("Finish")
 
 
@@ -25,7 +24,6 @@ def dfs(maze: Maze):
     while len(stack) != 0:
         head = stack.pop()
         res = maze.explore(head[0][0], head[0][1])
-        time.sleep(0.1)
         for i in res:
             if i not in visited and res[i] != PixelType.WALL:
                 if res[i] == PixelType.EXIT:
@@ -47,7 +45,6 @@ def bfs(maze: Maze):
     while len(queue) != 0:
         head = queue.pop(0)
         res = maze.explore(head[0][0], head[0][1])
-        time.sleep(0.1)
         for i in res:
             if i not in visited and res[i] != PixelType.WALL:
                 if res[i] == PixelType.EXIT:
