@@ -4,7 +4,7 @@ from enum import Enum
 from tkinter import Tk, Canvas
 
 
-class _PixelType(Enum):
+class PixelType(Enum):
     UNKNOWN = -2
     BOUNDARY = -1
     EMPTY = 0
@@ -14,9 +14,9 @@ class _PixelType(Enum):
 
 
 class _Pixel:
-    def __init__(self, x: int, y: int, pixel_type: _PixelType):
+    def __init__(self, x: int, y: int, pixel_type: PixelType):
         self._location = (x, y)
-        self._pixel_type: _PixelType = pixel_type
+        self._pixel_type: PixelType = pixel_type
 
     @property
     def location(self):
@@ -38,7 +38,7 @@ class Maze:
     def __init__(self):
         self._steps = 0
         self._size = (8, 10)
-        self._maze = [[_Pixel(i, j, _PixelType.EMPTY) for j in range(self._size[1])] for i in range(self._size[0])]
+        self._maze = [[_Pixel(i, j, PixelType.EMPTY) for j in range(self._size[1])] for i in range(self._size[0])]
         self._mask = [[False for _ in range(self._size[1])] for _ in range(self._size[0])]
         self._start = (-1, -1)
         self._exit = (-1, -1)
@@ -56,13 +56,13 @@ class Maze:
         for i in range(self._size[0]):
             for j in range(self._size[1]):
                 if hardcoded_maze[i][j] == 1:
-                    self._maze[i][j].pixel_type = _PixelType.WALL
+                    self._maze[i][j].pixel_type = PixelType.WALL
                 elif hardcoded_maze[i][j] == 2:
-                    self._maze[i][j].pixel_type = _PixelType.START
+                    self._maze[i][j].pixel_type = PixelType.START
                     self._start = (i, j)
                     self._mask[i][j] = True
                 elif hardcoded_maze[i][j] == 3:
-                    self._maze[i][j].pixel_type = _PixelType.EXIT
+                    self._maze[i][j].pixel_type = PixelType.EXIT
                     self._exit = (i, j)
                     self._mask[i][j] = True
 
@@ -114,10 +114,10 @@ class Maze:
                 return False  # Check in-range
             if abs(a[0] - b[0]) + abs(a[1] - b[1]) != 1:
                 return False  # Check connectivity
-            if not ((self._maze[a[0]][a[1]].pixel_type == _PixelType.START) or
-                    (self._maze[a[0]][a[1]].pixel_type == _PixelType.EMPTY and
-                     self._maze[b[0]][b[1]].pixel_type == _PixelType.EMPTY) or
-                    (self._maze[b[0]][b[1]].pixel_type == _PixelType.EXIT)):
+            if not ((self._maze[a[0]][a[1]].pixel_type == PixelType.START) or
+                    (self._maze[a[0]][a[1]].pixel_type == PixelType.EMPTY and
+                     self._maze[b[0]][b[1]].pixel_type == PixelType.EMPTY) or
+                    (self._maze[b[0]][b[1]].pixel_type == PixelType.EXIT)):
                 return False  # Empty space
         return True
 
@@ -132,13 +132,13 @@ class Maze:
         for i in self._maze:
             display += "|"
             for j in i:
-                if j.pixel_type == _PixelType.EMPTY:
+                if j.pixel_type == PixelType.EMPTY:
                     display += " "
-                elif j.pixel_type == _PixelType.WALL:
+                elif j.pixel_type == PixelType.WALL:
                     display += "X"
-                elif j.pixel_type == _PixelType.START:
+                elif j.pixel_type == PixelType.START:
                     display += "S"
-                elif j.pixel_type == _PixelType.EXIT:
+                elif j.pixel_type == PixelType.EXIT:
                     display += "E"
                 else:
                     raise
@@ -180,18 +180,18 @@ class _DISP:
     def start(self):
         self.root.mainloop()
 
-    def update(self, x: int, y: int, scheme: _PixelType):
-        if scheme == _PixelType.UNKNOWN:
+    def update(self, x: int, y: int, scheme: PixelType):
+        if scheme == PixelType.UNKNOWN:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray55")
-        elif scheme == _PixelType.BOUNDARY:
+        elif scheme == PixelType.BOUNDARY:
             raise
-        elif scheme == _PixelType.EMPTY:
+        elif scheme == PixelType.EMPTY:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray85")
-        elif scheme == _PixelType.WALL:
+        elif scheme == PixelType.WALL:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray15")
-        elif scheme == _PixelType.START:
+        elif scheme == PixelType.START:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gold")
-        elif scheme == _PixelType.EXIT:
+        elif scheme == PixelType.EXIT:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="coral")
 
     def update_num(self, num: int):

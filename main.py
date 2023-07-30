@@ -1,6 +1,6 @@
 import time
 
-from mazeUI import _maze, Maze, _PixelType
+from mazeUI import _maze, Maze, PixelType
 
 
 def strategy(maze: Maze):
@@ -19,7 +19,7 @@ def dfs(maze: Maze):
     init = maze.explore(0, 0)
     for i in init:
         visited.append(i)
-        if init[i] != _PixelType.WALL:
+        if init[i] != PixelType.WALL:
             stack.append((i, [(0, 0), i]))
 
     while len(stack) != 0:
@@ -27,8 +27,8 @@ def dfs(maze: Maze):
         res = maze.explore(head[0][0], head[0][1])
         time.sleep(0.1)
         for i in res:
-            if i not in visited and res[i] != _PixelType.WALL:
-                if res[i] == _PixelType.EXIT:
+            if i not in visited and res[i] != PixelType.WALL:
+                if res[i] == PixelType.EXIT:
                     return head[1] + [i]
                 visited.append(i)
                 stack.append((i, head[1] + [i]))
@@ -41,7 +41,7 @@ def bfs(maze: Maze):
     init = maze.explore(0, 0)
     for i in init:
         visited.append(i)
-        if init[i] != _PixelType.WALL:
+        if init[i] != PixelType.WALL:
             queue.append((i, [(0, 0), i]))
 
     while len(queue) != 0:
@@ -49,8 +49,8 @@ def bfs(maze: Maze):
         res = maze.explore(head[0][0], head[0][1])
         time.sleep(0.1)
         for i in res:
-            if i not in visited and res[i] != _PixelType.WALL:
-                if res[i] == _PixelType.EXIT:
+            if i not in visited and res[i] != PixelType.WALL:
+                if res[i] == PixelType.EXIT:
                     return head[1] + [i]
                 visited.append(i)
                 queue.append((i, head[1] + [i]))
