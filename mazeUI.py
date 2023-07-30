@@ -81,6 +81,7 @@ class Maze:
     def explore(self, x: int, y: int):
         assert self._mask[x][y], "你只能探索可见区域"
         self._steps += 1
+        self._disp.update_num(self._steps)
         result = {}
         if x > 0:
             result[(x - 1, y)] = self._maze[x - 1][y].pixel_type
@@ -172,6 +173,8 @@ class _DISP:
                                                          y + side, fill="gray55")
                 self.cells[-1].append(rect)
 
+        self.score = self.maze_canvas.create_text(800, 10, text=0, fill="gray85",
+                                                  font=('Helvetica', '21', 'bold'), anchor=tkinter.NE)
         self.maze: Maze = maze
 
     def start(self):
@@ -190,6 +193,15 @@ class _DISP:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gold")
         elif scheme == _PixelType.EXIT:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="coral")
+
+    def update_num(self, num: int):
+        self.maze_canvas.itemconfigure(self.score, text=num)
+        if num < 1000:
+            self.maze_canvas.itemconfigure(self.score, font=('Helvetica', '21', 'bold'))
+        elif num >= 1000:
+            self.maze_canvas.itemconfigure(self.score, font=('Helvetica', '16', 'bold'))
+        elif num >= 10000:
+            self.maze_canvas.itemconfigure(self.score, font=('Helvetica', '14', 'bold'))
 
 
 _maze = Maze()
