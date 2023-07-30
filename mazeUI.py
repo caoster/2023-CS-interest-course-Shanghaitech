@@ -92,7 +92,7 @@ class Maze:
         _optional_sleep()
         assert self._mask[x][y], "你只能探索可见区域"
         self._steps += 1
-        self._disp.update_num(self._steps)
+        self._disp.update_score(self._steps)
         result = {}
         if x > 0:
             result[(x - 1, y)] = self._maze[x - 1][y].pixel_type
@@ -134,6 +134,7 @@ class Maze:
             if self._maze[a[0]][a[1]].pixel_type == PixelType.EMPTY:
                 self._path_len += 1
                 self._disp.update(a[0], a[1], PixelType.PATH)
+                self._disp.update_length(self._path_len)
                 _optional_sleep()
         return True
 
@@ -174,8 +175,8 @@ class _DISP:
         self.root = Tk(className="Maze")
         self.root.resizable(False, False)
         # self.root.bind("<Escape>", lambda _: self.root.destroy())
-        self.root.geometry("800x450")
-        self.maze_canvas = Canvas(self.root, width=800, height=450, background="#000")
+        self.root.geometry("850x450")
+        self.maze_canvas = Canvas(self.root, width=850, height=450, background="#000")
         self.maze_canvas.pack()
         self.maze_canvas.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
 
@@ -189,8 +190,15 @@ class _DISP:
                                                          y + side, fill="gray55")
                 self.cells[-1].append(rect)
 
-        self.score = self.maze_canvas.create_text(800, 10, text=0, fill="gray85",
+        self.score_notice = self.maze_canvas.create_text(850, 10, text="探索步数", fill="gray85",
+                                                         font=('Helvetica', '15', 'bold'), anchor=tkinter.NE)
+        self.score = self.maze_canvas.create_text(850, 40, text=0, fill="gray85",
                                                   font=('Helvetica', '21', 'bold'), anchor=tkinter.NE)
+
+        self.length_notice = self.maze_canvas.create_text(850, 80, text="路径长度", fill="green",
+                                                          font=('Helvetica', '15', 'bold'), anchor=tkinter.NE)
+        self.length = self.maze_canvas.create_text(850, 110, text=0, fill="green",
+                                                   font=('Helvetica', '21', 'bold'), anchor=tkinter.NE)
         self.maze: Maze = maze
 
     def start(self):
@@ -212,14 +220,11 @@ class _DISP:
         elif scheme == PixelType.PATH:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="green")
 
-    def update_num(self, num: int):
-        self.maze_canvas.itemconfigure(self.score, text=num)
-        if num < 1000:
-            self.maze_canvas.itemconfigure(self.score, font=('Helvetica', '21', 'bold'))
-        elif num >= 1000:
-            self.maze_canvas.itemconfigure(self.score, font=('Helvetica', '16', 'bold'))
-        elif num >= 10000:
-            self.maze_canvas.itemconfigure(self.score, font=('Helvetica', '14', 'bold'))
+    def update_score(self, score: int):
+        self.maze_canvas.itemconfigure(self.score, text=score)
+
+    def update_length(self, length: int):
+        self.maze_canvas.itemconfigure(self.length, text=length)
 
 
 _maze = Maze()
