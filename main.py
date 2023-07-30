@@ -1,5 +1,3 @@
-import time
-
 from mazeUI import _maze, Maze, PixelType
 
 
