@@ -70,12 +70,16 @@ class Maze:
         self._init_disp()
 
     def start(self, strategy: callable):
-        timer = threading.Timer(interval=1, function=strategy, args=[self])
+        def run_function():
+            result = strategy(self)
+            print(self._submit(result))
+
+        timer = threading.Timer(interval=1, function=run_function)
         timer.start()
         self._disp.start()
 
     def explore(self, x: int, y: int):
-        assert self._mask[x][y]
+        assert self._mask[x][y], "你只能探索可见区域"
         self._steps += 1
         result = {}
         if x > 0:
@@ -96,21 +100,24 @@ class Maze:
             self._disp.update(x, y + 1, self._maze[x][y + 1].pixel_type)
         return result
 
-    def submit(self, path: [tuple[int, int]]):
-        if path is None:
-            return False  # TODO: No solution?
+    def _submit(self, path: [tuple[int, int]]):
         if path[0] != self._start or path[-1] != self._exit:
             return False
-        for idx in range(len(path)):
+        for idx in range(len(path) - 1):
             a = path[idx]
             b = path[idx + 1]
             if not (self._mask[a[0]][a[1]] and self._mask[b[0]][b[1]]):
                 return False  # Explore before commit
-            if not (0 <= a[0] < self._size[0] and 0 <= a[1] < self._size[1] and 0 <= b[0] < self._size[0] and 0 <= b[
-                1] < self._size[1]):
+            if not (0 <= a[0] < self._size[0] and 0 <= a[1] < self._size[1] and
+                    0 <= b[0] < self._size[0] and 0 <= b[1] < self._size[1]):
                 return False  # Check in-range
             if abs(a[0] - b[0]) + abs(a[1] - b[1]) != 1:
                 return False  # Check connectivity
+            if not ((self._maze[a[0]][a[1]].pixel_type == _PixelType.START) or
+                    (self._maze[a[0]][a[1]].pixel_type == _PixelType.EMPTY and
+                     self._maze[b[0]][b[1]].pixel_type == _PixelType.EMPTY) or
+                    (self._maze[b[0]][b[1]].pixel_type == _PixelType.EXIT)):
+                return False  # Empty space
         return True
 
     def _init_disp(self):
