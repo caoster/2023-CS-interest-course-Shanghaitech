@@ -2,9 +2,13 @@ import random
 
 
 class _MazeGenerator:
-    def __init__(self, size: tuple[int, int]):
+    def __init__(self, size: tuple[int, int], seed: int = 1234):
         self._size = size
         self._init_var()
+        temp_state = random.getstate()
+        random.seed(seed)
+        self._random_state = random.getstate()
+        random.setstate(temp_state)
 
     def _init_var(self):
         self._root = [i for i in range(self._size[1] * (self._size[0] * 2 - 1) - self._size[0])]
@@ -35,14 +39,18 @@ class _MazeGenerator:
             self._walls_kept.append(random_wall)
 
     def run(self):
+        temp_state = random.getstate()
+        random.setstate(self._random_state)
+
         self._init_var()
         while len(self._unchecked_walls) != 0:
             self._step()
         # TODO: translate walls to grid
 
+        self._random_state = random.getstate()
+        random.setstate(temp_state)
+
 
 m = _MazeGenerator((50, 30))
 m.run()
 pass
-
-# TODO: random engine
