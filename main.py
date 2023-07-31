@@ -1,4 +1,5 @@
-from mazeUI import _maze, Maze, PixelType
+import mazeUI
+from mazeUI import _maze, Maze, PixelType, WAIT
 
 
 def strategy(maze: Maze):
@@ -52,6 +53,7 @@ def bfs(maze: Maze):
         print(head)
 
 
+mazeUI.WAIT = False
 # _maze.start(strategy)
 # _maze.start(dfs)
 _maze.start(bfs)
