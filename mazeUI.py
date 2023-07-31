@@ -178,10 +178,11 @@ class _DISP:
 
         self.cells = []
         side = 15
-        for ix in range(50):
+        offset = 7
+        for ix in range(49):
             self.cells.append([])
-            for iy in range(30):
-                x, y = ix * side, iy * side
+            for iy in range(29):
+                x, y = ix * side + offset, iy * side + offset
                 rect = self.maze_canvas.create_rectangle(x, y, x + side,
                                                          y + side, fill="gray55")
                 self.cells[-1].append(rect)
