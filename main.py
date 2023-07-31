@@ -1,5 +1,5 @@
 import mazeUI
-from mazeUI import _maze, Maze, PixelType, WAIT
+from mazeUI import _maze, Maze, PixelType
 
 
 def strategy(maze: Maze):

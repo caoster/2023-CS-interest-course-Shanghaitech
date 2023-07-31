@@ -26,26 +26,6 @@ class _MazeGenerator:
         else:
             return size * (a - 1) + b + 1, size * a + b + 1
 
-    # def _wall_to_grid(self, num):
-    #     size_x, size_y = self._size
-    #     center = num * 2
-    #     x = center // (2 * size_y - 1)
-    #     y = center % (2 * size_y - 1)
-    #
-    #     result = []
-    #     if x % 2 == 0:  # Horizontal
-    #         if y - 1 >= 0:
-    #             result.append((x, y - 1))
-    #         result.append((x, y))
-    #         if y + 1 < size_y:
-    #             result.append((x, y + 1))
-    #     else:  # Vertical
-    #         if x - 1 >= 0:
-    #             result.append((x - 1, y))
-    #         result.append((x, y))
-    #         if x + 1 < size_x:
-    #             result.append((x + 1, y))
-    #     return result
     def _wall_to_grid(self, num):
         size_x, size_y = self._size
         cell1, cell2 = self._barrier_to_block(num)
@@ -68,12 +48,10 @@ class _MazeGenerator:
 
     def _step(self):
         random_wall = self._unchecked_walls.pop(random.randrange(len(self._unchecked_walls)))
-        # random_wall = self._unchecked_walls.pop()
         block1, block2 = self._barrier_to_block(random_wall)
         root_1, root_2 = self._get_root(block1), self._get_root(block2)
         if root_1 != root_2:
             self._root[root_2 - 1] = root_1
-            print(f"remove {random_wall}")
         else:
             self._walls_kept.append(random_wall)
 
@@ -82,27 +60,19 @@ class _MazeGenerator:
         random.setstate(self._random_state)
 
         self._init_var()
-        for i in range(1, 23):
-            print(i, self._barrier_to_block(i))
         while len(self._unchecked_walls) != 0:
             self._step()
 
         self._random_state = random.getstate()
         random.setstate(temp_state)
 
-        # self._walls_kept = [3, 4, 5, 6, 15, 16, 18]
-        # self._walls_kept = [6]
         result = []
         for i in range(self._size[0] - 1):
             for j in range(self._size[1] - 1):
                 result.append((2 * i + 1, 2 * j + 1))
-        # result.remove((0, 0))
-        # result.remove((2 * (self._size[0] - 1), 2 * (self._size[1] - 1)))
+
         return [self._wall_to_grid(i) for i in self._walls_kept] + result
 
 
 m = _MazeGenerator((25, 15))
-# m = _MazeGenerator((5, 3))
 print(m.run())
-print(m._walls_kept)
-pass
