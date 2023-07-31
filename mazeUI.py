@@ -13,10 +13,44 @@ def _optional_sleep():
         time.sleep(0.05)
 
 
+class _Record:
+    def __init__(self, seed, explore, length, record: bool = True):
+        self.seed = seed
+        self.explore = explore
+        self.length = length
+        if record:
+            _stats.append(self)
+
+    def __str__(self):
+        return f"| Seed: {self.seed:>15} | Explore: {self.explore:>5} | Length: {self.length:>5} |"
+
+    def __repr__(self):
+        return f"| Seed: {self.seed:>15} | Explore: {self.explore:>5} | Length: {self.length:>5} |"
+
+    def __add__(self, other):
+        return _Record("", self.explore + other.explore, self.length + other.length, False)
+
+    def __truediv__(self, other):
+        return _Record("Sum", round(self.explore / other, 1), round(self.length / other, 1), False)
+
+
+_stats: [_Record] = []
+
+
+def display_result():
+    print("----------------------------------------------------------")
+    for _stat in _stats:
+        print(_stat)
+    print("|-----------------------|----------------|---------------|")
+    print(sum(_stats, _Record("", 0, 0, False)) / len(_stats))
+    print("----------------------------------------------------------")
+
+
 class _MazeGenerator:
-    def __init__(self, size: tuple[int, int], seed: int = 1234):
+    def __init__(self, size: tuple[int, int], seed: int):
         self._size = size
         self._init_var()
+        self.seed = seed
         temp_state = random.getstate()
         random.seed(seed)
         self._random_state = random.getstate()
@@ -117,11 +151,11 @@ class _Pixel:
 
 
 class Maze:
-    def __init__(self):
+    def __init__(self, seed: int = 1234):
         self._steps = 0
         self._path_len = 0
         self._size = (49, 29)
-        self._generator = _MazeGenerator(((self._size[0] + 1) // 2, (self._size[1] + 1) // 2))
+        self._generator = _MazeGenerator(((self._size[0] + 1) // 2, (self._size[1] + 1) // 2), seed)
         self._maze = [[_Pixel(i, j, PixelType.EMPTY) for j in range(self._size[1])] for i in range(self._size[0])]
         self._mask = [[False for _ in range(self._size[1])] for _ in range(self._size[0])]
         self._start = (-1, -1)
@@ -151,7 +185,11 @@ class Maze:
     def start(self, strategy: callable):
         def run_function():
             result = strategy(self)
-            print(self._submit(result))
+            if self._submit(result):
+                _Record(self._generator.seed, self._steps, self._path_len)
+            else:
+                print(f"Wrong Answer! Seed: {self._generator.seed}")
+                assert False
 
         timer = threading.Timer(interval=1, function=run_function)
         timer.start()
@@ -238,9 +276,6 @@ class Maze:
 
 class _DISP:
     def __init__(self, maze: Maze):
-        print("v<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-        print("v  Welcome to Python class!  ^")
-        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>^")
         self.root = Tk(className="Maze")
         self.root.resizable(False, False)
         # self.root.bind("<Escape>", lambda _: self.root.destroy())
@@ -295,3 +330,8 @@ class _DISP:
 
     def update_length(self, length: int):
         self.maze_canvas.itemconfigure(self.length, text=length)
+
+
+print("v<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+print("v  Welcome to Python class!  ^")
+print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>^")
