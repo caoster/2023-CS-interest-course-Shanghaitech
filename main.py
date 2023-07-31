@@ -56,5 +56,5 @@ def bfs(maze: Maze):
 # mazeUI.WAIT = False
 maze = Maze()
 # maze.start(strategy)
-# maze.start(dfs)
-maze.start(bfs)
+maze.start(dfs)
+# maze.start(bfs)

@@ -75,6 +75,9 @@ class _MazeGenerator:
         while len(self._unchecked_walls) != 0:
             self._step()
 
+        for i in range(5):
+            self._walls_kept.pop(random.randrange(len(self._walls_kept)))
+
         self._random_state = random.getstate()
         random.setstate(temp_state)
 
