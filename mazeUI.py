@@ -10,7 +10,7 @@ WAIT = True
 
 def _optional_sleep():
     if WAIT:
-        time.sleep(0.1)
+        time.sleep(0.05)
 
 
 class _MazeGenerator:
@@ -46,7 +46,7 @@ class _MazeGenerator:
         cell1_x = cell1 // size_x
         cell1_y = cell1 % size_x
         cell2_x = cell2 // size_x
-        cell2_y = cell2 % size_x
+        # cell2_y = cell2 % size_x
         if cell1_x == cell2_x:
             return 2 * cell1_y + 1, 2 * cell1_x
         else:
@@ -78,12 +78,8 @@ class _MazeGenerator:
         self._random_state = random.getstate()
         random.setstate(temp_state)
 
-        result = []
-        for i in range(self._size[0] - 1):
-            for j in range(self._size[1] - 1):
-                result.append((2 * i + 1, 2 * j + 1))
-
-        return [self._wall_to_grid(i) for i in self._walls_kept] + result
+        return [self._wall_to_grid(i) for i in self._walls_kept] + \
+            [(2 * i + 1, 2 * j + 1) for i in range(self._size[0] - 1) for j in range(self._size[1] - 1)]
 
 
 class PixelType(Enum):
@@ -296,6 +292,3 @@ class _DISP:
 
     def update_length(self, length: int):
         self.maze_canvas.itemconfigure(self.length, text=length)
-
-
-_maze = Maze()
