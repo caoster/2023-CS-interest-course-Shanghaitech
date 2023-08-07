@@ -109,7 +109,7 @@ class _MazeGenerator:
         while len(self._unchecked_walls) != 0:
             self._step()
 
-        for i in range(5):
+        for i in range(len(self._walls_kept) // 50):
             self._walls_kept.pop(random.randrange(len(self._walls_kept)))
 
         self._random_state = random.getstate()
@@ -151,10 +151,16 @@ class _Pixel:
 
 
 class Maze:
-    def __init__(self, seed: int = 1234):
+    def __init__(self, seed: int = 1234, size: tuple[int, int] = (49, 29)):
         self._steps = 0
         self._path_len = 0
-        self._size = (49, 29)
+        if size[0] < 7 or size[1] < 5:
+            print(f"Size should be at least 7x5!")
+            exit(1)
+        elif size[0] > 49 or size[1] > 29:
+            print(f"Size should be at most 49x29!")
+            exit(1)
+        self._size = size
         self._generator = _MazeGenerator(((self._size[0] + 1) // 2, (self._size[1] + 1) // 2), seed)
         self._maze = [[_Pixel(i, j, PixelType.EMPTY) for j in range(self._size[1])] for i in range(self._size[0])]
         self._mask = [[False for _ in range(self._size[1])] for _ in range(self._size[0])]

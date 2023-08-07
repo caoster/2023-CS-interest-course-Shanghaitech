@@ -55,7 +55,7 @@ def bfs(maze: Maze):
 
 mazeUI.WAIT = False
 for i in range(20):
-    maze = Maze(i)
+    maze = Maze(seed=i, size=(31, 7))
     # maze.start(dfs)
     maze.start(bfs)
 
