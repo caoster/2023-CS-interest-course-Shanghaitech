@@ -15,12 +15,14 @@ def _optional_sleep():
 
 
 class _Record:
+    stats = []
+
     def __init__(self, seed, explore, length, record: bool = True):
         self.seed = seed
         self.explore = explore
         self.length = length
         if record:
-            _stats.append(self)
+            _Record.stats.append(self)
 
     def __str__(self):
         return f"| Seed: {self.seed:>15} | Explore: {self.explore:>5} | Length: {self.length:>5} |"
@@ -35,15 +37,12 @@ class _Record:
         return _Record("Sum", round(self.explore / other, 1), round(self.length / other, 1), False)
 
 
-_stats: [_Record] = []
-
-
 def display_result():
     print("----------------------------------------------------------")
-    for _stat in _stats:
+    for _stat in _Record.stats:
         print(_stat)
     print("|-----------------------|----------------|---------------|")
-    print(sum(_stats, _Record("", 0, 0, False)) / len(_stats))
+    print(sum(_Record.stats, _Record("", 0, 0, False)) / len(_Record.stats))
     print("----------------------------------------------------------")
 
 
