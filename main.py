@@ -1,5 +1,5 @@
 import mazeUI
-from mazeUI import Maze, PixelType, display_result
+from mazeUI import Maze, PixelType, display_result, MazePlay
 
 
 def strategy(maze: Maze):
@@ -53,10 +53,12 @@ def bfs(maze: Maze):
         print(head)
 
 
-mazeUI.WAIT = False
-for i in range(20):
-    maze = Maze(seed=i, size=(31, 7))
-    # maze.start(dfs)
-    maze.start(bfs)
+# mazeUI.WAIT = False
+# for i in range(20):
+#     maze = Maze(seed=i, size=(31, 7))
+#     # maze.start(dfs)
+#     maze.start(bfs)
+#
+# display_result()
 
-display_result()
+MazePlay()

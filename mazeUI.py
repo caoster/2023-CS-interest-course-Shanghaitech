@@ -2,6 +2,7 @@ import random
 import threading
 import time
 import tkinter
+from typing import Optional
 from enum import Enum
 from tkinter import Tk, Canvas
 
@@ -291,14 +292,11 @@ class _DISP:
         self.maze_canvas.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
 
         self.cells = []
-        side = 15
-        offset = 7
-        for ix in range(49):
+        for x in range(49):
             self.cells.append([])
-            for iy in range(29):
-                x, y = ix * side + offset, iy * side + offset
-                rect = self.maze_canvas.create_rectangle(x, y, x + side,
-                                                         y + side, fill="gray55")
+            for y in range(29):
+                x_start, y_start, x_end, y_end = self._get_position(x, y)
+                rect = self.maze_canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="gray55")
                 self.cells[-1].append(rect)
 
         self.score_notice = self.maze_canvas.create_text(850, 10, text="探索步数", fill="gray85",
@@ -307,10 +305,26 @@ class _DISP:
                                                   font=('Helvetica', '21', 'bold'), anchor=tkinter.NE)
 
         self.length_notice = self.maze_canvas.create_text(850, 80, text="路径长度", fill="green",
-                                                          font=('Helvetica', '15', 'bold'), anchor=tkinter.NE)
+                                                          font=('Helvetica', '15', 'bold'),
+                                                          anchor=tkinter.NE, tags="length")
         self.length = self.maze_canvas.create_text(850, 110, text=0, fill="green",
-                                                   font=('Helvetica', '21', 'bold'), anchor=tkinter.NE)
-        self.maze: Maze = maze
+                                                   font=('Helvetica', '21', 'bold'),
+                                                   anchor=tkinter.NE, tags="length")
+        self.maze: Optional[Maze, MazePlay] = maze
+
+        # Display person in `MazePlay` mode
+        self.person = None
+
+    @staticmethod
+    def _get_position(x, y, small=False):
+        side = 15
+        offset = 7
+        smaller = 4
+        if small:
+            return x * side + offset + smaller, y * side + offset + smaller, \
+                   x * side + offset + side - smaller, y * side + offset + side - smaller
+        else:
+            return x * side + offset, y * side + offset, x * side + offset + side, y * side + offset + side
 
     def start(self):
         self.root.mainloop()
@@ -336,6 +350,73 @@ class _DISP:
 
     def update_length(self, length: int):
         self.maze_canvas.itemconfigure(self.length, text=length)
+
+    def update_person(self, x, y):
+        x_start, y_start, x_end, y_end = self._get_position(x, y, True)
+        self.maze_canvas.coords(self.person, x_start, y_start, x_end, y_end)
+
+    def bind_wasd(self):
+        self.maze_canvas.itemconfigure(self.score_notice, text="步数")
+        self.maze_canvas.delete("length")
+        x_start, y_start, x_end, y_end = self._get_position(0, 0, True)
+        self.person = self.maze_canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="blue")
+        self.root.bind("<w>", self.maze.w)
+        self.root.bind("<a>", self.maze.a)
+        self.root.bind("<s>", self.maze.s)
+        self.root.bind("<d>", self.maze.d)
+        self.root.bind("<h>", self.maze.display_all)
+
+
+class MazePlay(Maze):
+    def __init__(self, seed: int = 1234, size: tuple[int, int] = (49, 29)):
+        super().__init__(seed, size)
+        global WAIT
+        self.prev_wait = WAIT
+        WAIT = False
+        self.person_pos = [0, 0]
+        self.explore(0, 0)
+        self._disp.bind_wasd()
+        self._disp.start()
+        WAIT = self.prev_wait
+
+    def _possible_position(self, x, y):
+        if not (0 <= x < self._size[0] and 0 <= y < self._size[1]):
+            return False
+        if self._maze[x][y].pixel_type != PixelType.EMPTY \
+                and self._maze[x][y].pixel_type != PixelType.EXIT \
+                and self._maze[x][y].pixel_type != PixelType.START:
+            return False
+        return True
+
+    def a(self, *_):
+        if self._possible_position(self.person_pos[0] - 1, self.person_pos[1]):
+            self.person_pos[0] -= 1
+            self.explore(self.person_pos[0], self.person_pos[1])
+            self._disp.update_person(self.person_pos[0], self.person_pos[1])
+
+    def d(self, *_):
+        if self._possible_position(self.person_pos[0] + 1, self.person_pos[1]):
+            self.person_pos[0] += 1
+            self.explore(self.person_pos[0], self.person_pos[1])
+            self._disp.update_person(self.person_pos[0], self.person_pos[1])
+
+    def s(self, *_):
+        if self._possible_position(self.person_pos[0], self.person_pos[1] + 1):
+            self.person_pos[1] += 1
+            self.explore(self.person_pos[0], self.person_pos[1])
+            self._disp.update_person(self.person_pos[0], self.person_pos[1])
+
+    def w(self, *_):
+        if self._possible_position(self.person_pos[0], self.person_pos[1] - 1):
+            self.person_pos[1] -= 1
+            self.explore(self.person_pos[0], self.person_pos[1])
+            self._disp.update_person(self.person_pos[0], self.person_pos[1])
+
+    def display_all(self, *_):
+        for x in range(self._size[0]):
+            for y in range(self._size[1]):
+                self._mask[x][y] = True
+                self._disp.update(x, y, self._maze[x][y].pixel_type)
 
 
 print("v<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
