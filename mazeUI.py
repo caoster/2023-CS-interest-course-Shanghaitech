@@ -363,7 +363,7 @@ class _DISP:
         self.root.bind("<a>", self.maze.a)
         self.root.bind("<s>", self.maze.s)
         self.root.bind("<d>", self.maze.d)
-        self.root.bind("<h>", self.maze.display_all)
+        self.root.bind("<Control-h>", self.maze.display_all)
 
 
 class MazePlay(Maze):
