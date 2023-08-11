@@ -381,8 +381,8 @@ class _DISP:
         self.maze_canvas.coords(self.person, x_start, y_start, x_end, y_end)
 
     def bind_wasd(self):
-        self.maze_canvas.itemconfigure(self.score_notice, text="步数")
-        self.maze_canvas.delete("length")
+        self.maze_canvas.itemconfigure(self.score_notice, text="行走步数")
+        self.maze_canvas.itemconfigure(self.length_notice, text="探索次数")
         x_start, y_start, x_end, y_end = self._get_position(0, 0, True)
         self.person = self.maze_canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="blue")
         self.root.bind("<w>", self.maze.w)
@@ -414,35 +414,43 @@ class MazePlay(Maze):
             return False
         return True
 
+    def update_explores(self):
+        self._disp.update_length(sum([sum(i) for i in self._explored]))
+
     def a(self, *_):
         if self._possible_position(self.person_pos[0] - 1, self.person_pos[1]):
             self.person_pos[0] -= 1
             self.explore(self.person_pos[0], self.person_pos[1])
             self._disp.update_person(self.person_pos[0], self.person_pos[1])
+            self.update_explores()
 
     def d(self, *_):
         if self._possible_position(self.person_pos[0] + 1, self.person_pos[1]):
             self.person_pos[0] += 1
             self.explore(self.person_pos[0], self.person_pos[1])
             self._disp.update_person(self.person_pos[0], self.person_pos[1])
+            self.update_explores()
 
     def s(self, *_):
         if self._possible_position(self.person_pos[0], self.person_pos[1] + 1):
             self.person_pos[1] += 1
             self.explore(self.person_pos[0], self.person_pos[1])
             self._disp.update_person(self.person_pos[0], self.person_pos[1])
+            self.update_explores()
 
     def w(self, *_):
         if self._possible_position(self.person_pos[0], self.person_pos[1] - 1):
             self.person_pos[1] -= 1
             self.explore(self.person_pos[0], self.person_pos[1])
             self._disp.update_person(self.person_pos[0], self.person_pos[1])
+            self.update_explores()
 
     def display_all(self, *_):
         for x in range(self._size[0]):
             for y in range(self._size[1]):
                 self._mask[x][y] = True
-                self._disp.update(x, y, self._maze[x][y].pixel_type)
+                if not self._explored[x][y]:
+                    self._disp.update(x, y, self._maze[x][y].pixel_type)
 
 
 print("v<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
