@@ -121,12 +121,15 @@ class _MazeGenerator:
 
 class PixelType(Enum):
     UNKNOWN = -2
-    BOUNDARY = -1
+    EXPLORED = -1
     EMPTY = 0
     WALL = 1
     START = 2
     EXIT = 3
     PATH = 4
+
+    def is_start_exit(self):
+        return self == PixelType.START or self == PixelType.EXIT
 
 
 class _Pixel:
@@ -164,6 +167,7 @@ class Maze:
         self._generator = _MazeGenerator(((self._size[0] + 1) // 2, (self._size[1] + 1) // 2), seed)
         self._maze = [[_Pixel(i, j, PixelType.EMPTY) for j in range(self._size[1])] for i in range(self._size[0])]
         self._mask = [[False for _ in range(self._size[1])] for _ in range(self._size[0])]
+        self._explored = [[False for _ in range(self._size[1])] for _ in range(self._size[0])]
         self._start = (-1, -1)
         self._exit = (-1, -1)
         wall_list = self._generator.run()
@@ -180,10 +184,12 @@ class Maze:
                     self._maze[i][j].pixel_type = PixelType.START
                     self._start = (i, j)
                     self._mask[i][j] = True
+                    self._explored[i][j] = True
                 elif maze[i][j] == 3:
                     self._maze[i][j].pixel_type = PixelType.EXIT
                     self._exit = (i, j)
                     self._mask[i][j] = True
+                    self._explored[i][j] = True
 
         self._disp: _DISP = _DISP(self)
         self._init_disp()
@@ -204,25 +210,45 @@ class Maze:
     def explore(self, x: int, y: int):
         _optional_sleep()
         assert self._mask[x][y], "你只能探索可见区域"
+        assert self._maze[x][y] != PixelType.WALL, "你不能走到墙上"
         self._steps += 1
+        self._explored[x][y] = True
+        if not self._maze[x][y].pixel_type.is_start_exit():
+            self._disp.update(x, y, PixelType.EXPLORED)
+        else:
+            pass
         self._disp.update_score(self._steps)
         result = {}
         if x > 0:
             result[(x - 1, y)] = self._maze[x - 1][y].pixel_type
             self._mask[x - 1][y] = True
-            self._disp.update(x - 1, y, self._maze[x - 1][y].pixel_type)
+            if (not self._explored[x - 1][y]) or self._maze[x - 1][y].pixel_type.is_start_exit():
+                self._disp.update(x - 1, y, self._maze[x - 1][y].pixel_type)
+            else:
+                self._disp.update(x - 1, y, PixelType.EXPLORED)
         if x < self._size[0] - 1:
             result[(x + 1, y)] = self._maze[x + 1][y].pixel_type
             self._mask[x + 1][y] = True
-            self._disp.update(x + 1, y, self._maze[x + 1][y].pixel_type)
+            if (not self._explored[x + 1][y]) or self._maze[x + 1][y].pixel_type.is_start_exit():
+                self._disp.update(x + 1, y, self._maze[x + 1][y].pixel_type)
+            else:
+                self._disp.update(x + 1, y, PixelType.EXPLORED)
         if y > 0:
             result[(x, y - 1)] = self._maze[x][y - 1].pixel_type
             self._mask[x][y - 1] = True
             self._disp.update(x, y - 1, self._maze[x][y - 1].pixel_type)
+            if (not self._explored[x][y - 1]) or self._maze[x][y - 1].pixel_type.is_start_exit():
+                self._disp.update(x, y - 1, self._maze[x][y - 1].pixel_type)
+            else:
+                self._disp.update(x, y - 1, PixelType.EXPLORED)
         if y < self._size[1] - 1:
             result[(x, y + 1)] = self._maze[x][y + 1].pixel_type
             self._mask[x][y + 1] = True
             self._disp.update(x, y + 1, self._maze[x][y + 1].pixel_type)
+            if (not self._explored[x][y + 1]) or self._maze[x][y + 1].pixel_type.is_start_exit():
+                self._disp.update(x, y + 1, self._maze[x][y + 1].pixel_type)
+            else:
+                self._disp.update(x, y + 1, PixelType.EXPLORED)
         return result
 
     def _submit(self, path: [tuple[int, int]]):
@@ -331,8 +357,8 @@ class _DISP:
     def update(self, x: int, y: int, scheme: PixelType):
         if scheme == PixelType.UNKNOWN:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray55")
-        elif scheme == PixelType.BOUNDARY:
-            raise
+        elif scheme == PixelType.EXPLORED:
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="pink")
         elif scheme == PixelType.EMPTY:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray85")
         elif scheme == PixelType.WALL:
@@ -383,7 +409,8 @@ class MazePlay(Maze):
             return False
         if self._maze[x][y].pixel_type != PixelType.EMPTY \
                 and self._maze[x][y].pixel_type != PixelType.EXIT \
-                and self._maze[x][y].pixel_type != PixelType.START:
+                and self._maze[x][y].pixel_type != PixelType.START \
+                and self._maze[x][y].pixel_type != PixelType.EXPLORED:
             return False
         return True
 
