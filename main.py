@@ -53,12 +53,13 @@ def bfs(maze: Maze):
         print(head)
 
 
-# mazeUI.WAIT = False
-# for i in range(20):
-#     maze = Maze(seed=i, size=(31, 7))
-#     # maze.start(dfs)
-#     maze.start(bfs)
-#
-# display_result()
+mazeUI.WAIT = False
+mazeUI.MASK = True
+for i in range(5):
+    maze = Maze(seed=i, size=(31, 7))
+    maze.start(dfs)
+    # maze.start(bfs)
 
-MazePlay()
+display_result()
+
+# MazePlay()

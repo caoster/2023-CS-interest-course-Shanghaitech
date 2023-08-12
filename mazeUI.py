@@ -7,6 +7,7 @@ from enum import Enum
 from tkinter import Tk, Canvas
 
 WAIT = True
+MASK = False
 
 
 def _optional_sleep():
@@ -280,7 +281,7 @@ class Maze:
     def _init_disp(self):
         for i in range(self._size[0]):
             for j in range(self._size[1]):
-                if self._mask[i][j]:
+                if not MASK or self._mask[i][j]:
                     self._disp.update(i, j, self._maze[i][j].pixel_type)
 
     def __str__(self):
@@ -366,7 +367,7 @@ class _DISP:
         elif scheme == PixelType.START:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gold")
         elif scheme == PixelType.EXIT:
-            self.maze_canvas.itemconfigure(self.cells[x][y], fill="coral")
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="red")
         elif scheme == PixelType.PATH:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="green")
 
