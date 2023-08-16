@@ -32,10 +32,16 @@ class _Record:
         return f"| Seed: {self.seed:>15} | Explore: {self.explore:>5} | Length: {self.length:>5} |"
 
     def __add__(self, other):
-        return _Record("", self.explore + other.explore, self.length + other.length, False)
+        if self.length != "-" and other.length != "-":
+            return _Record("", self.explore + other.explore, self.length + other.length, False)
+        else:
+            return _Record("", self.explore + other.explore, "-", False)
 
     def __truediv__(self, other):
-        return _Record("Sum", round(self.explore / other, 1), round(self.length / other, 1), False)
+        if self.length != "-":
+            return _Record("Sum", round(self.explore / other, 1), round(self.length / other, 1), False)
+        else:
+            return _Record("Sum", round(self.explore / other, 1), "-", False)
 
 
 def display_result():
@@ -171,6 +177,7 @@ class Maze:
         self._explored = [[False for _ in range(self._size[1])] for _ in range(self._size[0])]
         self._start = (-1, -1)
         self._exit = (-1, -1)
+        self.finish = False
         wall_list = self._generator.run()
         maze = [[0 for _ in range(self._size[1])] for _ in range(self._size[0])]
         maze[0][0] = 2
@@ -198,7 +205,9 @@ class Maze:
     def start(self, strategy: callable):
         def run_function():
             result = strategy(self)
-            if self._submit(result):
+            if result is None and self.finish:
+                _Record(self._generator.seed, self._steps, "-")
+            elif self._submit(result):
                 _Record(self._generator.seed, self._steps, self._path_len)
             else:
                 print(f"Wrong Answer! Seed: {self._generator.seed}")
@@ -213,6 +222,8 @@ class Maze:
         assert self._mask[x][y], "你只能探索可见区域"
         assert self._maze[x][y] != PixelType.WALL, "你不能走到墙上"
         self._steps += 1
+        if (x + 1, y + 1) == self.size:
+            self.finish = True
         self._explored[x][y] = True
         if not self._maze[x][y].pixel_type.is_start_exit():
             self._disp.update(x, y, PixelType.EXPLORED)
@@ -253,6 +264,8 @@ class Maze:
         return result
 
     def _submit(self, path: [tuple[int, int]]):
+        if path is None:
+            return False
         if path[0] != self._start or path[-1] != self._exit:
             return False
         for idx in range(len(path) - 1):
