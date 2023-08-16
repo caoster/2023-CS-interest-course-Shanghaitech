@@ -22,19 +22,20 @@ MazePlay()
 
 ### `PixelType`
 
-在Python中，有一种用法叫列举类型(enum)，由于课程没有涉及，这里直接展示其用法。
+定义如下：
 
 ```python
-from mazeUI import PixelType
-
-pixel = PixelType.EMPTY
-
-if pixel == PixelType.EXIT:
-    pass
-elif pixel == PixelType.EMPTY:
-    pass
-elif ...
+class PixelType(Enum):
+    UNKNOWN = -2  # 不需要
+    EXPLORED = -1  # 不需要
+    EMPTY = 0
+    WALL = 1
+    START = 2
+    EXIT = 3
+    PATH = 4  # 不需要
 ```
+
+在Python中，有一种用法叫列举类型(enum)，由于课程没有涉及，这里直接展示其用法。
 
 在该项目中，你可能会使用到的值有：
 
@@ -51,6 +52,25 @@ PixelType.EXIT
 - `WALL`表示给定坐标点的迷宫为墙体。
 - `START`表示该位置为起始点（本项目中默认为左上角）。
 - `EXIT`表示该位置为迷宫出口（本项目中默认为右下角）。
+
+这个类在使用时应该主要用于确认迷宫中的某个点是否为墙壁/出口：
+
+```python
+from mazeUI import PixelType
+
+pixel = PixelType.EMPTY  # 迷宫中获取的一个点
+
+if pixel == PixelType.EXIT:
+    pass  # 如果是迷宫出口
+elif pixel == PixelType.EMPTY:
+    pass  # 如果是空地
+elif pixel == PixelType.START:
+    pass  # 如果是迷宫入口
+elif pixel == PixelType.WALL:
+    pass  # 如果是墙壁
+else:
+    assert False, "在正常程序中不可能是其他情况"
+```
 
 ### `Maze`
 
@@ -93,9 +113,11 @@ maze.start(strategy)
 
 例如，在游戏开始我们可以选择`maze.explore(0, 0)`，这将告诉我们迷宫入口附近的情况。
 
-它的返回值可能是`{(0, 1): PixelType.EMPTY, (1, 0): PixelType.WALL}`。
+他的返回值表明了该点上下左右的情况。
 
-这代表通过探索(0, 0)，我们得知了迷宫的(0, 1)为空地，(1, 0)为墙壁。
+例如在上述例子中，返回值可能是`{(0, 1): PixelType.EMPTY, (1, 0): PixelType.WALL}`。
+
+这代表通过探索(0, 0)，我们得知了迷宫的(0, 1)为空地，(1, 0)为墙壁。而该点的上/左两个方向已经超出了迷宫范围，自然是不包含在返回值里。
 
 ### 我的策略函数应该什么时候返回，返回什么？
 
@@ -173,9 +195,9 @@ display_result()
 
 ### `MASK`
 
-该变量默认为False，学生一直可以观察完整的迷宫。
+该变量默认为`False`，学生一直可以观察完整的迷宫。
 
-如果被设置为True，迷宫中未探索的位置一直呈现灰色，隐藏视野。只有当周围(上下左右)有位置被探索过以后才会展示。
+如果被设置为`True`，迷宫中未探索的位置一直呈现灰色，隐藏视野。只有当周围(上下左右)有位置被探索过以后才会展示。
 
 注意该设置项仅影响展示，对算法本身的逻辑没有任何影响。
 
