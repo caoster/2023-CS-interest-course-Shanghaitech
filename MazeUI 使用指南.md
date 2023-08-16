@@ -22,7 +22,7 @@ MazePlay()
 
 ### `PixelType`
 
-在Python中，有一种用法叫列举类型(enum)，由于课程没有设计，这里直接展示其用法。
+在Python中，有一种用法叫列举类型(enum)，由于课程没有涉及，这里直接展示其用法。
 
 ```python
 from mazeUI import PixelType
