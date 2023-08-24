@@ -220,7 +220,7 @@ class Maze:
     def explore(self, x: int, y: int):
         _optional_sleep()
         assert self._mask[x][y], "你只能探索可见区域"
-        assert self._maze[x][y] != PixelType.WALL, "你不能走到墙上"
+        assert self._maze[x][y].pixel_type != PixelType.WALL, "你不能走到墙上"
         self._steps += 1
         if (x + 1, y + 1) == self.size:
             self.finish = True
