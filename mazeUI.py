@@ -400,10 +400,15 @@ class _DISP:
         x_start, y_start, x_end, y_end = self._get_position(0, 0, True)
         self.person = self.maze_canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="blue")
         self.root.bind("<w>", self.maze.w)
+        self.root.bind("<W>", self.maze.w)
         self.root.bind("<a>", self.maze.a)
+        self.root.bind("<A>", self.maze.a)
         self.root.bind("<s>", self.maze.s)
+        self.root.bind("<S>", self.maze.s)
         self.root.bind("<d>", self.maze.d)
+        self.root.bind("<D>", self.maze.d)
         self.root.bind("<Control-h>", self.maze.display_all)
+        self.root.bind("<Control-H>", self.maze.display_all)
 
 
 class MazePlay(Maze):
