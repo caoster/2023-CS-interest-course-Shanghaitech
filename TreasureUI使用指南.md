@@ -93,6 +93,7 @@ for i in range(5):
 当人物在怪物周围一圈范围内时，`radiation`为0.5
 当人物在更远距离时，`radiation`为0.0
 
+TODO: `PlayerAgent`
 
 ### `TreasurePlay`
 
@@ -102,7 +103,12 @@ for i in range(5):
 
 该类没有评测作用，仅用于帮助学生熟悉迷宫规则。
 
-`clear`, `display`
+`clear`, `display`for i in range(5):
+    treasure = Treasure(seed=i)
+    agent = DFSAgent()
+    treasure.start(agent)
+
+display()
 
 ### `display()`
 
@@ -139,6 +145,37 @@ display()
 ```
 
 统计数据显示，在运行了五个种子的地图(0, 1, 2, 3, 4)后，平均成本为174.0
+
+### `clear()`
+
+```python
+import treasureUI
+from treasureUI import PlayerAgent, PixelType, Treasure, display, clear
+
+
+class DFSAgent(PlayerAgent):
+    def step(self, puzzle):
+        pass
+
+
+for i in range(5):
+    treasure = Treasure(seed=i)
+    agent = DFSAgent()
+    treasure.start(agent)
+
+display()
+clear()
+
+for i in range(100, 105):
+    treasure = Treasure(seed=i)
+    agent = DFSAgent()
+    treasure.start(agent)
+
+display()
+```
+
+运行后，系统清空所有历史记录，重新记录新的游戏信息。
+
 
 ## 设置
 
