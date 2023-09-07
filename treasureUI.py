@@ -63,7 +63,7 @@ class Treasure:
             _IdleMob((7, 0), 150)
         ]
         self.player = self.entrance
-        self._score = 1000
+        self._cost = 0
 
         self._disp: _DISP = _DISP(self)
         self._init_disp()
@@ -85,6 +85,12 @@ class Treasure:
     def _update_mobs(self):
         self._disp.update_mobs(self.mobs)
 
+    def get_mobs_info(self):
+        #  If level 1
+        return self.mobs
+        #  If level 2
+        return [(0.5, 150), (1, 200)]
+
     def start(self, agent: PlayerAgent):
         if not isinstance(agent, PlayerAgent):
             return  # TODO: Error msg
@@ -95,21 +101,21 @@ class Treasure:
                 if self._is_invalid_move(move):
                     return  # TODO: Error msg
 
-                delta = self._evaluate_score(move)
+                delta = self._evaluate_cost(move)
                 self.player = move
                 self._update_player()
 
                 if delta == "Victory":
                     return  # TODO: win
                 else:
-                    self._score += delta
+                    self._cost += delta
 
                 self._perform_mobs_move()
 
-                self._score += self._evaluate_mobs_score()
-                self._disp.update_score(self._score)
+                self._cost += self._evaluate_mobs_cost()
+                self._disp.update_cost(self._cost)
 
-                if self._score < 0:
+                if self._cost < 0:
                     return  # TODO: lose
                 _optional_sleep()
 
@@ -131,12 +137,12 @@ class Treasure:
 
         return False
 
-    def _evaluate_score(self, to):
+    def _evaluate_cost(self, to):
         x, y = to
         if to == self.exit:
             return "Victory"
         if self.map[x][y] == PixelType.ROAD:
-            return -1
+            return 1
 
     def _perform_mobs_move(self):
         for mob in self.mobs:
@@ -144,11 +150,11 @@ class Treasure:
             mob.location = move
         self._update_mobs()
 
-    def _evaluate_mobs_score(self):
+    def _evaluate_mobs_cost(self):
         delta = 0
         for mob in self.mobs:
             if mob.location == self.player:
-                delta -= mob.cost
+                delta += mob.cost
         return delta
 
     def explore(self, x: int, y: int):
@@ -182,10 +188,10 @@ class _DISP:
                 rect = self.canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="gray55")
                 self.cells[-1].append(rect)
 
-        self.score_notice = self.canvas.create_text(850, 10, text="分数", fill="gray85",
-                                                    font=('Helvetica', '15', 'bold'), anchor=tkinter.NE)
-        self.score = self.canvas.create_text(850, 40, text=1000, fill="gray85",
-                                             font=('Helvetica', '21', 'bold'), anchor=tkinter.NE)
+        self.cost_notice = self.canvas.create_text(850, 10, text="探索成本", fill="gray85",
+                                                   font=('Helvetica', '15', 'bold'), anchor=tkinter.NE)
+        self.cost = self.canvas.create_text(850, 40, text=0, fill="gray85",
+                                            font=('Helvetica', '21', 'bold'), anchor=tkinter.NE)
 
         self.treasure = treasure
 
@@ -222,8 +228,8 @@ class _DISP:
         elif scheme == PixelType.MOB:
             self.canvas.itemconfigure(self.cells[x][y], fill="green")
 
-    def update_score(self, score: int):
-        self.canvas.itemconfigure(self.score, text=score)
+    def update_cost(self, cost: int):
+        self.canvas.itemconfigure(self.cost, text=cost)
 
     def update_player(self, x, y):
         self.canvas.delete(self.player)
