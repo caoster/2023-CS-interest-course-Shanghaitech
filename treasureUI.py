@@ -1,3 +1,4 @@
+import random
 import threading
 import time
 from enum import Enum
@@ -31,9 +32,9 @@ class Level:
 
 
 _in_class_levels = {
-    1: Level((0, 0), (17, 8), 2, 0, True),
-    2: Level((0, 0), (17, 8), 2, 0, False),
-    3: Level((0, 0), (17, 8), 0, 1, True),
+    1: Level((0, 0), (17, 8), [100, 150], [], True),
+    2: Level((0, 0), (17, 8), [100, 150], [], False),
+    3: Level((0, 0), (17, 8), 0, [100], True),
 }
 
 _game_map = [
@@ -111,11 +112,7 @@ class Treasure:
 
         self.entrance = self.level.entrance
         self.exit = self.level.goal
-        # TODO: Mob generation
-        self.mobs = [
-            _BFSMob((1, 0), 100),
-            _IdleMob((4, 6), 100),
-        ]
+        self.mobs = self._generate_mobs()
         self.player = self.entrance
         self._cost = 0
 
@@ -220,6 +217,19 @@ class Treasure:
             if mob.location == self.player:
                 delta += mob.cost
         return delta
+
+    def _generate_mobs(self):
+        available_list = []
+        for i in range(len(self.map)):
+            for j in range(len(self.map[i])):
+                if self.map[i][j] == PixelType.ROAD:
+                    available_list.append((i, j))
+        available_list.remove(self.entrance)
+
+        # random choose total from available_list
+        locations = random.sample(available_list, len(self.level.idle + self.level.smart))
+        return ([_IdleMob(loc, cost) for loc, cost in zip(locations[:len(self.level.idle)], self.level.idle)]
+                + [_BFSMob(loc, cost) for loc, cost in zip(locations[len(self.level.idle):], self.level.smart)])
 
     def explore(self, x: int, y: int):
         result = {}
