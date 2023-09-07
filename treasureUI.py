@@ -53,7 +53,7 @@ class Treasure:
         self.map = [[PixelType(j) for j in i] for i in self.map]
         self.size = len(self.map), len(self.map[0])
         self.entrance = (0, 0)
-        self.exit = (18, 9)
+        self.exit = (17, 8)
         self.mobs = [{"location": (5, 0), "cost": 100, "agent": _IdleMob()}, {"location": (7, 0), "cost": 150, "agent": _IdleMob()}]
         self.player = self.entrance
         self._score = 1000
@@ -70,7 +70,7 @@ class Treasure:
                 self._disp.update(i, j, self.map[i][j])
 
         x, y = self.exit
-        self._disp.update(x - 1, y - 1, PixelType.EXIT)
+        self._disp.update(x, y, PixelType.EXIT)
 
     def _update_player(self):
         self._disp.update_player(*self.player)
@@ -126,10 +126,10 @@ class Treasure:
 
     def _evaluate_score(self, to):
         x, y = to
+        if to == self.exit:
+            return "Victory"
         if self.map[x][y] == PixelType.ROAD:
             return -1
-        elif self.map[x][y] == PixelType.WALL:
-            return "Victory"
 
     def _perform_mobs_move(self):
         for mob in self.mobs:
@@ -230,12 +230,33 @@ class _DISP:
             self.mobs.append(self.canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="red"))
 
 
-class TestAgent(PlayerAgent):
+class DFSAgent(PlayerAgent):
+    def __init__(self):
+        self.path = []
+
     def step(self, puzzle):
-        if puzzle.player != puzzle.entrance:
-            return puzzle.entrance
+        if len(self.path) == 0:
+            visited = []
+            stack = []
+            current = puzzle.player
+            init = puzzle.explore(*current)
+            for i in init:
+                visited.append(i)
+                if init[i] != PixelType.WALL:
+                    stack.append((i, [current, i]))
+
+            while len(stack) != 0:
+                head = stack.pop()
+                res = puzzle.explore(*head[0])
+                for i in res:
+                    if i not in visited and res[i] != PixelType.WALL:
+                        if i == puzzle.exit:
+                            self.path = (head[1] + [i])[1:]
+                            return self.path.pop(0)
+                        visited.append(i)
+                        stack.append((i, head[1] + [i]))
         else:
-            return 0, 1
+            return self.path.pop(0)
 
 
-Treasure().start(TestAgent())
+Treasure().start(DFSAgent())
