@@ -56,13 +56,13 @@ class Treasure:
         self.exit = (18, 9)
         self.mobs = [{"location": (5, 0), "cost": 100, "agent": _IdleMob()}, {"location": (7, 0), "cost": 150, "agent": _IdleMob()}]
         self.player = self.entrance
-        self.score = 1000
+        self._score = 1000
 
         self._disp: _DISP = _DISP(self)
         self._init_disp()
 
-        self.update_player()
-        self.update_mobs()
+        self._update_player()
+        self._update_mobs()
 
     def _init_disp(self):
         for i in range(self.size[0]):
@@ -72,10 +72,10 @@ class Treasure:
         x, y = self.exit
         self._disp.update(x - 1, y - 1, PixelType.EXIT)
 
-    def update_player(self):
+    def _update_player(self):
         self._disp.update_player(*self.player)
 
-    def update_mobs(self):
+    def _update_mobs(self):
         self._disp.update_mobs(self.mobs)
 
     def start(self, agent: PlayerAgent):
@@ -90,19 +90,19 @@ class Treasure:
 
                 delta = self._evaluate_score(move)
                 self.player = move
-                self.update_player()
+                self._update_player()
 
                 if delta == "Victory":
                     return  # TODO: win
                 else:
-                    self.score += delta
+                    self._score += delta
 
                 self._perform_mobs_move()
 
-                self.score += self._evaluate_mobs_score()
-                self._disp.update_score(self.score)
+                self._score += self._evaluate_mobs_score()
+                self._disp.update_score(self._score)
 
-                if self.score < 0:
+                if self._score < 0:
                     return  # TODO: lose
                 _optional_sleep()
 
@@ -135,7 +135,7 @@ class Treasure:
         for mob in self.mobs:
             move = mob["agent"].step(self, mob["location"])
             mob["location"] = move
-        self.update_mobs()
+        self._update_mobs()
 
     def _evaluate_mobs_score(self):
         delta = 0
