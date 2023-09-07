@@ -165,7 +165,7 @@ class _DISP:
 
         self.score_notice = self.canvas.create_text(850, 10, text="分数", fill="gray85",
                                                     font=('Helvetica', '15', 'bold'), anchor=tkinter.NE)
-        self.score = self.canvas.create_text(850, 40, text=0, fill="gray85",
+        self.score = self.canvas.create_text(850, 40, text=1000, fill="gray85",
                                              font=('Helvetica', '21', 'bold'), anchor=tkinter.NE)
 
         self.treasure = treasure
