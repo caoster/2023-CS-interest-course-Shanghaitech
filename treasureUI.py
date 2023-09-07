@@ -18,13 +18,17 @@ class PlayerAgent:
 
 
 class _Mob:
-    def step(self, puzzle, position):
+    def __init__(self, location, cost):
+        self.location = location
+        self.cost = cost
+
+    def step(self, puzzle):
         raise NotImplementedError
 
 
 class _IdleMob(_Mob):
-    def step(self, puzzle, position):
-        return position
+    def step(self, puzzle):
+        return self.location
 
 
 class PixelType(Enum):
@@ -54,7 +58,10 @@ class Treasure:
         self.size = len(self.map), len(self.map[0])
         self.entrance = (0, 0)
         self.exit = (17, 8)
-        self.mobs = [{"location": (5, 0), "cost": 100, "agent": _IdleMob()}, {"location": (7, 0), "cost": 150, "agent": _IdleMob()}]
+        self.mobs = [
+            _IdleMob((4, 6), 100),
+            _IdleMob((7, 0), 150)
+        ]
         self.player = self.entrance
         self._score = 1000
 
@@ -133,15 +140,15 @@ class Treasure:
 
     def _perform_mobs_move(self):
         for mob in self.mobs:
-            move = mob["agent"].step(self, mob["location"])
-            mob["location"] = move
+            move = mob.step(self)
+            mob.location = move
         self._update_mobs()
 
     def _evaluate_mobs_score(self):
         delta = 0
         for mob in self.mobs:
-            if mob["location"] == self.player:
-                delta -= mob["cost"]
+            if mob.location == self.player:
+                delta -= mob.cost
         return delta
 
     def explore(self, x: int, y: int):
@@ -186,15 +193,19 @@ class _DISP:
         self.mobs = []
 
     @staticmethod
-    def _get_position(x, y, small=False):
-        side = 40
+    def _get_position(x, y, small=False, medium=False):
+        large = 40
         offset = 20
-        smaller = 8
+        small_delta = 10
+        medium_delta = 5
         if small:
-            return x * side + offset + smaller, y * side + offset + smaller, \
-                   x * side + offset + side - smaller, y * side + offset + side - smaller
+            return x * large + offset + small_delta, y * large + offset + small_delta, \
+                   x * large + offset + large - small_delta, y * large + offset + large - small_delta
+        elif medium:
+            return x * large + offset + medium_delta, y * large + offset + medium_delta, \
+                   x * large + offset + large - medium_delta, y * large + offset + large - medium_delta
         else:
-            return x * side + offset, y * side + offset, x * side + offset + side, y * side + offset + side
+            return x * large + offset, y * large + offset, x * large + offset + large, y * large + offset + large
 
     def start(self):
         self.root.mainloop()
@@ -216,7 +227,7 @@ class _DISP:
 
     def update_player(self, x, y):
         self.canvas.delete(self.player)
-        x_start, y_start, x_end, y_end = self._get_position(x, y, True)
+        x_start, y_start, x_end, y_end = self._get_position(x, y, medium=True)
         self.player = self.canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="blue")
 
     def update_mobs(self, mobs):
@@ -225,8 +236,8 @@ class _DISP:
 
         self.mobs.clear()
         for mob in mobs:
-            x, y = mob["location"]
-            x_start, y_start, x_end, y_end = self._get_position(x, y, True)
+            x, y = mob.location
+            x_start, y_start, x_end, y_end = self._get_position(x, y, small=True)
             self.mobs.append(self.canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="red"))
 
 
