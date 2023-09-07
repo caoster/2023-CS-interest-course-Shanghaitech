@@ -17,6 +17,16 @@ class PlayerAgent:
         raise NotImplementedError
 
 
+class _Mob:
+    def step(self, puzzle, position):
+        raise NotImplementedError
+
+
+class _IdleMob(_Mob):
+    def step(self, puzzle, position):
+        return position
+
+
 class PixelType(Enum):
     ROAD = 0
     WALL = 1
@@ -44,7 +54,7 @@ class Treasure:
         self.size = len(self.map), len(self.map[0])
         self.entrance = (0, 0)
         self.exit = (18, 9)
-        self.mobs = [{"location": (5, 0), "cost": 100}, {"location": (7, 0), "cost": 150}]
+        self.mobs = [{"location": (5, 0), "cost": 100, "agent": _IdleMob()}, {"location": (7, 0), "cost": 150, "agent": _IdleMob()}]
         self.player = self.entrance
         self.score = 1000
 
@@ -58,6 +68,9 @@ class Treasure:
         for i in range(self.size[0]):
             for j in range(self.size[1]):
                 self._disp.update(i, j, self.map[i][j])
+
+        x, y = self.exit
+        self._disp.update(x - 1, y - 1, PixelType.EXIT)
 
     def update_player(self):
         self._disp.update_player(*self.player)
@@ -85,9 +98,9 @@ class Treasure:
                     self.score += delta
                     self._disp.update_score(self.score)
 
-                # TODO: move mobs
+                self._perform_mobs_move()
 
-                # Evaluate mobs' score here
+                # TODO: Evaluate mobs' score here
 
                 if self.score < 0:
                     return  # TODO: lose
@@ -106,7 +119,7 @@ class Treasure:
         if self.map[x][y] == PixelType.WALL:
             return True
         # Not relative
-        if abs(x - self.player[0]) + abs(y - self.player[1]) != 1:
+        if abs(x - self.player[0]) + abs(y - self.player[1]) > 1:
             return True
 
         return False
@@ -117,6 +130,13 @@ class Treasure:
             return -1
         elif self.map[x][y] == PixelType.WALL:
             return "Victory"
+
+    def _perform_mobs_move(self):
+        for mob in self.mobs:
+            move = mob["agent"].step(self, mob["location"])
+            mob["location"] = move
+        self.update_mobs()
+
 
 
 class _DISP:
@@ -167,9 +187,9 @@ class _DISP:
         elif scheme == PixelType.WALL:
             self.canvas.itemconfigure(self.cells[x][y], fill="gray15")
         elif scheme == PixelType.START:
-            self.canvas.itemconfigure(self.cells[x][y], fill="gold")
-        elif scheme == PixelType.EXIT:
             self.canvas.itemconfigure(self.cells[x][y], fill="red")
+        elif scheme == PixelType.EXIT:
+            self.canvas.itemconfigure(self.cells[x][y], fill="gold")
         elif scheme == PixelType.MOB:
             self.canvas.itemconfigure(self.cells[x][y], fill="green")
 
