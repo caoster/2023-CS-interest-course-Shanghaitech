@@ -31,6 +31,36 @@ class _IdleMob(_Mob):
         return self.location
 
 
+class _BFSMob(_Mob):
+    def __init__(self, location, cost):
+        super().__init__(location, cost)
+
+    def step(self, puzzle):
+        visited = []
+        queue = []
+        current = self.location
+        if current == puzzle.player:
+            return current
+        init = puzzle.explore(*current)
+        for i in init:
+            if i == puzzle.player:
+                return i
+            visited.append(i)
+            if init[i] != PixelType.WALL:
+                queue.append((i, [current, i]))
+
+        while len(queue) != 0:
+            head = queue.pop(0)
+            res = puzzle.explore(*head[0])
+            for i in res:
+                if i not in visited and res[i] != PixelType.WALL:
+                    if i == puzzle.player:
+                        path = (head[1] + [i])[1:]
+                        return path[1]
+                    visited.append(i)
+                    queue.append((i, head[1] + [i]))
+
+
 class PixelType(Enum):
     ROAD = 0
     WALL = 1
@@ -59,8 +89,8 @@ class Treasure:
         self.entrance = (0, 0)
         self.exit = (17, 8)
         self.mobs = [
-            _IdleMob((4, 6), 100),
-            _IdleMob((7, 0), 150)
+            _BFSMob((4, 6), 100),
+            _IdleMob((7, 0), 100),
         ]
         self.player = self.entrance
         self._cost = 0
