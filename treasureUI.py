@@ -144,6 +144,18 @@ class Treasure:
                 delta -= mob["cost"]
         return delta
 
+    def explore(self, x: int, y: int):
+        result = {}
+        if x > 0:
+            result[(x - 1, y)] = self.map[x - 1][y]
+        if x < self.size[0] - 1:
+            result[(x + 1, y)] = self.map[x + 1][y]
+        if y > 0:
+            result[(x, y - 1)] = self.map[x][y - 1]
+        if y < self.size[1] - 1:
+            result[(x, y + 1)] = self.map[x][y + 1]
+        return result
+
 
 class _DISP:
     def __init__(self, treasure: Treasure):
