@@ -93,7 +93,33 @@ for i in range(5):
 当人物在怪物周围一圈范围内时，`radiation`为0.5
 当人物在更远距离时，`radiation`为0.0
 
-TODO: `PlayerAgent`
+### `PlayerAgent`
+
+这是一个基类(base class)，应当被继承，并且实现指定功能，类似于其他语言中的协议(protocol)：
+
+```python
+class PlayerAgent:
+    def step(self, puzzle):
+        raise NotImplementedError
+```
+
+学生实现功能时，应当继承此类，并且提供方法`step`。
+该函数应当接收一个参数，运行时会被传入一个`Treasure`对象。
+
+该函数在每次轮到人物移动时会被调用，应当返回一个坐标，代表下一步移动的位置。
+
+示例：
+
+```python
+class RightAgent(PlayerAgent):
+    def step(self, puzzle):
+        position = puzzle.player  # 获取当前游戏中人物位置
+
+        new_position = position[0] + 1, position[1]
+        # 向右移动一个格子
+
+        return new_position  # 返回新位置
+```
 
 ### `TreasurePlay`
 
@@ -102,13 +128,6 @@ TODO: `PlayerAgent`
 一旦TreasurePlay的实例创造完成，立即启动一个游戏窗口。使用W/A/S/D控制人物（蓝色小方块）在迷宫中移动。
 
 该类没有评测作用，仅用于帮助学生熟悉迷宫规则。
-
-`clear`, `display`for i in range(5):
-    treasure = Treasure(seed=i)
-    agent = DFSAgent()
-    treasure.start(agent)
-
-display()
 
 ### `display()`
 
@@ -176,7 +195,6 @@ display()
 
 运行后，系统清空所有历史记录，重新记录新的游戏信息。
 
-
 ## 设置
 
 该部分提供的功能有利于学生进行调试或展示：
@@ -192,6 +210,7 @@ display()
 该变量默认为`1`，默认使用第一题信息。
 
 按照课程背景，提供三个默认关卡：
+
 ```python
 _in_class_levels = {
     1: Level((0, 0), (17, 8), [100, 150], [], True),
@@ -199,11 +218,13 @@ _in_class_levels = {
     3: Level((0, 0), (17, 8), [], [100], True),
 }
 ```
+
 只要将该变量设置为1，2，3中的一个，就可以使用教学需要的关卡。
 
 若把该变量设置为`Level`类型，则会使用该变量携带的关卡信息。
 
 构造一个新关卡如下：
+
 ```python
 Level((0, 0), (17, 8), [100], [100, 200, 150], True)
 ```
