@@ -5,11 +5,51 @@ import tkinter
 from tkinter import Tk, Canvas
 
 WAIT = True
+LEVEL = 1
 
 
 def _optional_sleep():
     if WAIT:
         time.sleep(0.05)
+
+
+class PixelType(Enum):
+    ROAD = 0
+    WALL = 1
+    EXIT = 2
+    START = 3
+    MOB = 4
+
+
+class Level:
+    def __init__(self, entrance, goal, idle, smart, visible):
+        self.entrance = entrance
+        self.goal = goal
+        self.idle = idle
+        self.smart = smart
+        self.visible = visible
+
+
+_in_class_levels = {
+    1: Level((0, 0), (17, 8), 2, 0, True),
+    2: Level((0, 0), (17, 8), 2, 0, False),
+    3: Level((0, 0), (17, 8), 0, 1, True),
+}
+
+_game_map = [
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+]
+# Transpose!
+_game_map = list(map(list, zip(*_game_map)))
+_game_map = [[PixelType(j) for j in i] for i in _game_map]
 
 
 class PlayerAgent:
@@ -55,42 +95,26 @@ class _BFSMob(_Mob):
             for i in res:
                 if i not in visited and res[i] != PixelType.WALL:
                     if i == puzzle.player:
-                        path = (head[1] + [i])[1:]
-                        return path[1]
+                        return (head[1] + [i])[1]
                     visited.append(i)
                     queue.append((i, head[1] + [i]))
 
 
-class PixelType(Enum):
-    ROAD = 0
-    WALL = 1
-    EXIT = 2
-    START = 3
-    MOB = 4
-
-
 class Treasure:
     def __init__(self):
-        self.map = [
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-            [0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0],
-            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-            [0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0],
-            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-            [0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0],
-            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-            [0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
-        ]
-        # Transpose!
-        self.map = list(map(list, zip(*self.map)))
-        self.map = [[PixelType(j) for j in i] for i in self.map]
+        self.map = _game_map
         self.size = len(self.map), len(self.map[0])
-        self.entrance = (0, 0)
-        self.exit = (17, 8)
+        if type(LEVEL) == Level:
+            self.level = LEVEL
+        else:
+            self.level = _in_class_levels[LEVEL]
+
+        self.entrance = self.level.entrance
+        self.exit = self.level.goal
+        # TODO: Mob generation
         self.mobs = [
-            _BFSMob((4, 6), 100),
-            _IdleMob((7, 0), 100),
+            _BFSMob((1, 0), 100),
+            _IdleMob((4, 6), 100),
         ]
         self.player = self.entrance
         self._cost = 0
@@ -116,10 +140,10 @@ class Treasure:
         self._disp.update_mobs(self.mobs)
 
     def get_mobs_info(self):
-        #  If level 1
-        return self.mobs
-        #  If level 2
-        return [(0.5, 150), (1, 200)]
+        if self.level.visible:
+            return self.mobs
+        else:  # TODO: Calculate the distance
+            return [(0.5, 150), (1, 200)]
 
     def start(self, agent: PlayerAgent):
         if not isinstance(agent, PlayerAgent):
