@@ -4,6 +4,7 @@ import time
 from enum import Enum
 import tkinter
 from tkinter import Tk, Canvas
+from typing import Optional
 
 WAIT = True
 LEVEL = 1
@@ -36,7 +37,7 @@ class PixelType(Enum):
 
 
 class Level:
-    def __init__(self, entrance, goal, idle, smart, visible):
+    def __init__(self, entrance, goal, idle, smart, visible=True):
         self.entrance = entrance
         self.goal = goal
         self.idle = idle
@@ -47,7 +48,7 @@ class Level:
 _in_class_levels = {
     1: Level((0, 0), (17, 8), [100, 150], [], True),
     2: Level((0, 0), (17, 8), [100, 150], [], False),
-    3: Level((0, 0), (17, 8), 0, [100], True),
+    3: Level((0, 0), (17, 8), [], [100], True),
 }
 
 _game_map = [
@@ -184,6 +185,27 @@ class Treasure:
                     result.append({"radiation": 0, "cost": mob.cost})
             return result
 
+    def _process_move(self, move):
+        if self._is_invalid_move(move):
+            return True
+
+        delta = self._evaluate_cost(move)
+        self.player = move
+        self._update_player()
+
+        if delta == "Victory":
+            print(f"You win with cost {self._cost}")
+            return True
+        else:
+            self._cost += delta
+
+        self._perform_mobs_move()
+
+        self._cost += self._evaluate_mobs_cost()
+        self._disp.update_cost(self._cost)
+
+        return False
+
     def start(self, agent: PlayerAgent):
         if not isinstance(agent, PlayerAgent):
             print("Invalid agent")
@@ -192,25 +214,8 @@ class Treasure:
         def logic_mainloop():
             while True:
                 move = agent.step(self)
-                if self._is_invalid_move(move):
-                    print("Invalid move")
+                if self._process_move(move):
                     return
-
-                delta = self._evaluate_cost(move)
-                self.player = move
-                self._update_player()
-
-                if delta == "Victory":
-                    print(f"You win with cost {self._cost}")
-                    return
-                else:
-                    self._cost += delta
-
-                self._perform_mobs_move()
-
-                self._cost += self._evaluate_mobs_cost()
-                self._disp.update_cost(self._cost)
-
                 _optional_sleep()
 
         timer = threading.Timer(interval=1, function=logic_mainloop)
@@ -306,7 +311,7 @@ class _DISP:
         self.cost = self.canvas.create_text(850, 40, text=0, fill="gray85",
                                             font=('Helvetica', '21', 'bold'), anchor=tkinter.NE)
 
-        self.treasure = treasure
+        self.treasure: Optional[Treasure, TreasurePlay] = treasure
 
         self.player = None
         self.mobs = []
@@ -354,6 +359,54 @@ class _DISP:
             x, y = mob.location
             x_start, y_start, x_end, y_end = self._get_position(x, y, small=True)
             self.mobs.append(self.canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="red"))
+
+    def bind_wasd(self):
+        self.root.bind("<w>", self.treasure.w)
+        self.root.bind("<W>", self.treasure.w)
+        self.root.bind("<a>", self.treasure.a)
+        self.root.bind("<A>", self.treasure.a)
+        self.root.bind("<s>", self.treasure.s)
+        self.root.bind("<S>", self.treasure.s)
+        self.root.bind("<d>", self.treasure.d)
+        self.root.bind("<D>", self.treasure.d)
+
+
+class TreasurePlay(Treasure):
+    def __init__(self, seed: int = 1234):
+        super().__init__(seed)
+        self.player = list(self.player)
+
+        global WAIT
+        self.prev_wait = WAIT
+        WAIT = False
+        self.explore(0, 0)
+        self._disp.bind_wasd()
+        self._disp.start()
+        WAIT = self.prev_wait
+
+    def _possible_position(self, x, y):
+        if not (0 <= x < self.size[0] and 0 <= y < self.size[1]):
+            return False
+        if (self.map[x][y] != PixelType.ROAD
+                and self.map[x][y] != PixelType.START):
+            return False
+        return True
+
+    def a(self, *_):
+        move = self.player[0] - 1, self.player[1]
+        self._process_move(move)
+
+    def d(self, *_):
+        move = self.player[0] + 1, self.player[1]
+        self._process_move(move)
+
+    def s(self, *_):
+        move = self.player[0], self.player[1] + 1
+        self._process_move(move)
+
+    def w(self, *_):
+        move = self.player[0], self.player[1] - 1
+        self._process_move(move)
 
 
 print("v<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")

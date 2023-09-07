@@ -1,5 +1,5 @@
 import treasureUI
-from treasureUI import PlayerAgent, PixelType, Treasure
+from treasureUI import PlayerAgent, PixelType, Treasure, TreasurePlay, Level
 
 
 class DFSAgent(PlayerAgent):
@@ -40,3 +40,6 @@ treasureUI.display()
 treasureUI.clear()
 Treasure(seed=979).start(DFSAgent())
 treasureUI.display()
+
+treasureUI.LEVEL = Level((0, 0), (17, 8), [], [100, 100, 100])
+TreasurePlay()
