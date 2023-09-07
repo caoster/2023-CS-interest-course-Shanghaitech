@@ -96,11 +96,11 @@ class Treasure:
                     return  # TODO: win
                 else:
                     self.score += delta
-                    self._disp.update_score(self.score)
 
                 self._perform_mobs_move()
 
-                # TODO: Evaluate mobs' score here
+                self.score += self._evaluate_mobs_score()
+                self._disp.update_score(self.score)
 
                 if self.score < 0:
                     return  # TODO: lose
@@ -137,6 +137,12 @@ class Treasure:
             mob["location"] = move
         self.update_mobs()
 
+    def _evaluate_mobs_score(self):
+        delta = 0
+        for mob in self.mobs:
+            if mob["location"] == self.player:
+                delta -= mob["cost"]
+        return delta
 
 
 class _DISP:
