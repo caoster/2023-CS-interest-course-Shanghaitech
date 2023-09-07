@@ -9,6 +9,19 @@ WAIT = True
 LEVEL = 1
 
 
+def clear():
+    _Record.stats.clear()
+
+
+def display():
+    print("------------------------------------------")
+    for _stat in _Record.stats:
+        print(_stat)
+    print("|-----------------------|----------------|")
+    print(sum(_Record.stats, _Record("", 0, False)) / len(_Record.stats))
+    print("------------------------------------------")
+
+
 def _optional_sleep():
     if WAIT:
         time.sleep(0.1)
@@ -56,6 +69,28 @@ _game_map = [[PixelType(j) for j in i] for i in _game_map]
 class PlayerAgent:
     def step(self, puzzle):
         raise NotImplementedError
+
+
+class _Record:
+    stats = []
+
+    def __init__(self, seed, cost, record: bool = True):
+        self.seed = seed
+        self.cost = cost
+        if record:
+            _Record.stats.append(self)
+
+    def __str__(self):
+        return f"| Seed: {self.seed:>15} | Explore: {self.cost:>5} |"
+
+    def __repr__(self):
+        return f"| Seed: {self.seed:>15} | Explore: {self.cost:>5} |"
+
+    def __add__(self, other):
+        return _Record("", self.cost + other.cost, False)
+
+    def __truediv__(self, other):
+        return _Record("Sum", round(self.cost / other, 1), False)
 
 
 class _Mob:
@@ -181,6 +216,7 @@ class Treasure:
         timer = threading.Timer(interval=1, function=logic_mainloop)
         timer.start()
         self._disp.start()
+        _Record(self.seed, self._cost)
 
     def _is_invalid_move(self, to):
         x, y = to
@@ -320,33 +356,6 @@ class _DISP:
             self.mobs.append(self.canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="red"))
 
 
-class DFSAgent(PlayerAgent):
-    def __init__(self):
-        self.path = []
-
-    def step(self, puzzle):
-        if len(self.path) == 0:
-            visited = []
-            stack = []
-            current = puzzle.player
-            init = puzzle.explore(*current)
-            for i in init:
-                visited.append(i)
-                if init[i] != PixelType.WALL:
-                    stack.append((i, [current, i]))
-
-            while len(stack) != 0:
-                head = stack.pop()
-                res = puzzle.explore(*head[0])
-                for i in res:
-                    if i not in visited and res[i] != PixelType.WALL:
-                        if i == puzzle.exit:
-                            self.path = (head[1] + [i])[1:]
-                            return self.path.pop(0)
-                        visited.append(i)
-                        stack.append((i, head[1] + [i]))
-        else:
-            return self.path.pop(0)
-
-
-Treasure().start(DFSAgent())
+print("v<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+print("v  Welcome to Python class!  ^")
+print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>^")
