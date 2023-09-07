@@ -33,7 +33,6 @@ class PixelType(Enum):
     WALL = 1
     EXIT = 2
     START = 3
-    MOB = 4
 
 
 class Level:
