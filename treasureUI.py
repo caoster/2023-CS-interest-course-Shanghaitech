@@ -93,20 +93,23 @@ class Treasure:
 
     def start(self, agent: PlayerAgent):
         if not isinstance(agent, PlayerAgent):
-            return  # TODO: Error msg
+            print("Invalid agent")
+            return
 
         def logic_mainloop():
             while True:
                 move = agent.step(self)
                 if self._is_invalid_move(move):
-                    return  # TODO: Error msg
+                    print("Invalid move")
+                    return
 
                 delta = self._evaluate_cost(move)
                 self.player = move
                 self._update_player()
 
                 if delta == "Victory":
-                    return  # TODO: win
+                    print(f"You win with cost {self._cost}")
+                    return
                 else:
                     self._cost += delta
 
@@ -115,8 +118,6 @@ class Treasure:
                 self._cost += self._evaluate_mobs_cost()
                 self._disp.update_cost(self._cost)
 
-                if self._cost < 0:
-                    return  # TODO: lose
                 _optional_sleep()
 
         timer = threading.Timer(interval=1, function=logic_mainloop)
@@ -221,12 +222,8 @@ class _DISP:
             self.canvas.itemconfigure(self.cells[x][y], fill="gray85")
         elif scheme == PixelType.WALL:
             self.canvas.itemconfigure(self.cells[x][y], fill="gray15")
-        elif scheme == PixelType.START:
-            self.canvas.itemconfigure(self.cells[x][y], fill="red")
         elif scheme == PixelType.EXIT:
             self.canvas.itemconfigure(self.cells[x][y], fill="gold")
-        elif scheme == PixelType.MOB:
-            self.canvas.itemconfigure(self.cells[x][y], fill="green")
 
     def update_cost(self, cost: int):
         self.canvas.itemconfigure(self.cost, text=cost)
