@@ -141,9 +141,18 @@ class Treasure:
 
     def get_mobs_info(self):
         if self.level.visible:
-            return self.mobs
-        else:  # TODO: Calculate the distance
-            return [(0.5, 150), (1, 200)]
+            return [{"location": mob.location, "cost": mob.cost} for mob in self.mobs]
+        else:
+            result = []
+            for mob in self.mobs:
+                if self.player == mob.location:
+                    result.append({"radiation": 1.0, "cost": mob.cost})
+                elif (abs(self.player[0] - mob.location[0]) <= 1 and
+                      abs(self.player[1] - mob.location[1]) <= 1):
+                    result.append({"radiation": 0.5, "cost": mob.cost})
+                else:
+                    result.append({"radiation": 0, "cost": mob.cost})
+            return result
 
     def start(self, agent: PlayerAgent):
         if not isinstance(agent, PlayerAgent):
