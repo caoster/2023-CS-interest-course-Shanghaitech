@@ -86,7 +86,13 @@ for i in range(5):
 
 ### 详解`Treasure.get_mobs_info`
 
-TODO
+在“正常情况”下，该函数返回一个列表，其中的元素为字典。字典中`key`为`location`和`cost`，分别代表怪物的位置以及成本。
+
+当关卡的`visible`属性设为`False`时(详解见下方`LEVEL`解释)，该函数返回一个列表，其中的元素为字典。字典中`key`为`radiation`和`cost`，分别代表与怪物之间的距离以及成本。
+当人物已经和怪物重合，`radiation`为1.0
+当人物在怪物周围一圈范围内时，`radiation`为0.5
+当人物在更远距离时，`radiation`为0.0
+
 
 ### `TreasurePlay`
 

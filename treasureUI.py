@@ -181,7 +181,7 @@ class Treasure:
                       abs(self.player[1] - mob.location[1]) <= 1):
                     result.append({"radiation": 0.5, "cost": mob.cost})
                 else:
-                    result.append({"radiation": 0, "cost": mob.cost})
+                    result.append({"radiation": 0.0, "cost": mob.cost})
             return result
 
     def _process_move(self, move):
