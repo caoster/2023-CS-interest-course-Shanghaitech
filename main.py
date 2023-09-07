@@ -11,7 +11,7 @@ class DFSAgent(PlayerAgent):
             visited = []
             stack = []
             current = puzzle.player
-            init = puzzle.explore(*current)
+            init = puzzle.surrounding(*current)
             for i in init:
                 visited.append(i)
                 if init[i] != PixelType.WALL:
@@ -19,7 +19,7 @@ class DFSAgent(PlayerAgent):
 
             while len(stack) != 0:
                 head = stack.pop()
-                res = puzzle.explore(*head[0])
+                res = puzzle.surrounding(*head[0])
                 for i in res:
                     if i not in visited and res[i] != PixelType.WALL:
                         if i == puzzle.exit:
@@ -31,13 +31,13 @@ class DFSAgent(PlayerAgent):
             return self.path.pop(0)
 
 
-treasureUI.WAIT = False
-for i in range(5):
-    treasure = Treasure(seed=i)
-    agent = DFSAgent()
-    treasure.start(agent)
-
-display()
+# treasureUI.WAIT = False
+# for i in range(5):
+#     treasure = Treasure(seed=i)
+#     agent = DFSAgent()
+#     treasure.start(agent)
+#
+# display()
 # for i in range(1, 5):
 #     Treasure(seed=i).start(DFSAgent())
 # treasureUI.display()
@@ -47,5 +47,5 @@ display()
 # Treasure(seed=979).start(DFSAgent())
 # treasureUI.display()
 #
-# treasureUI.LEVEL = Level((0, 0), (17, 8), [], [100, 100, 100])
-# TreasurePlay()
+treasureUI.LEVEL = Level((0, 0), (17, 8), [300], [100, 100, 100])
+TreasurePlay()

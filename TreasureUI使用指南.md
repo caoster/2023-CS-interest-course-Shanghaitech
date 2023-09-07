@@ -18,7 +18,7 @@ TreasurePlay()
 
 ## 接口调用规则
 
-`treasureUI`提供了`Treasure`, `TreasurePlay`, `PixelType`, `LEVEL`, `PlayerAgent`三个类。
+`treasureUI`提供了`Treasure`, `TreasurePlay`, `PixelType`, `LEVEL`, `PlayerAgent`五个类。
 两个函数`clear`, `display`, 以及`WAIT`, `LEVEL`两项设置。
 
 ### `PixelType`
@@ -33,22 +33,22 @@ class PixelType(Enum):
     START = 3
 ```
 
-本项目使用了列举类型(enum)表示迷宫中的位置种类。
+本项目使用了列举类型(enum)表示地图中的位置种类。
 
 其对应的含义是：
 
-- `ROAD`表示给定坐标点的迷宫为一片空地。
-- `WALL`表示给定坐标点的迷宫为墙体。
-- `EXIT`表示该位置为迷宫出口。
+- `ROAD`表示给定坐标点的地图为一片空地。
+- `WALL`表示给定坐标点的地图为墙体。
+- `EXIT`表示该位置为地图出口。
 - `START`表示该位置为起始点。
 
-这个类在使用时应该主要用于确认迷宫中的某个点是否为墙壁/出口：
+这个类在使用时应该主要用于确认地图中的某个点是否为墙壁/出口：
 
 ### `Treasure`
 
 该类提供了一个构造函数: `Treasure(seed=1234)`
 
-- seed 的作用是"种子"，类似于`random.seed()`的功能。使用相同的该参数可以确保每次生成相同的地图。注意如果不传入该参数，种子将保持默认值(1234)。
+- seed 的作用是"种子"，类似于`random.seed()`的功能。使用相同的该参数可以确保每次生成的怪物位置相同。注意如果不传入该参数，种子将保持默认值(1234)。
 
 使用`Treasure.start`开始游戏。
 
@@ -70,28 +70,28 @@ for i in range(5):
     treasure.start(agent)
 ```
 
-### 详解`Treasure.explore`
+### 详解`Treasure.surrounding`
 
-正如上文所述，`explore`函数接受两个参数，即一个点在迷宫中的坐标(左上角为(0, 0))。
+正如上文所述，`surrounding`函数接受两个参数，即一个点在地图中的坐标(左上角为(0, 0))。
 
-`Treasure.explore()`会返回一个字典，其中的key为坐标，value为该点的信息。
+`Treasure.surrounding()`会返回一个字典，其中的key为坐标，value为该点的信息。
 
-例如，在游戏开始我们可以选择`treasure.explore(0, 0)`，这将告诉我们迷宫入口附近的情况。
+例如，在游戏开始我们可以选择`treasure.surrounding(0, 0)`，这将告诉我们地图入口附近的情况。
 
 他的返回值表明了该点上下左右的情况。
 
 例如在上述例子中，返回值可能是`{(0, 1): PixelType.ROAD, (1, 0): PixelType.WALL}`。
 
-这代表通过探索(0, 0)，我们得知了迷宫的(0, 1)为空地，(1, 0)为墙壁。而该点的上/左两个方向已经超出了迷宫范围，自然是不包含在返回值里。
+这代表通过探索(0, 0)，我们得知了地图的(0, 1)为空地，(1, 0)为墙壁。而该点的上/左两个方向已经超出了地图范围，自然是不包含在返回值里。
 
 ### 详解`Treasure.get_mobs_info`
 
 在“正常情况”下，该函数返回一个列表，其中的元素为字典。字典中`key`为`location`和`cost`，分别代表怪物的位置以及成本。
 
 当关卡的`visible`属性设为`False`时(详解见下方`LEVEL`解释)，该函数返回一个列表，其中的元素为字典。字典中`key`为`radiation`和`cost`，分别代表与怪物之间的距离以及成本。
-当人物已经和怪物重合，`radiation`为1.0
-当人物在怪物周围一圈范围内时，`radiation`为0.5
-当人物在更远距离时，`radiation`为0.0
+- 当人物已经和怪物重合，`radiation`为1.0
+- 当人物在怪物周围一圈范围内时，`radiation`为0.5
+- 当人物在更远距离时，`radiation`为0.0
 
 ### `PlayerAgent`
 
@@ -125,9 +125,9 @@ class RightAgent(PlayerAgent):
 
 该类提供一个构造函数: `TreasurePlay(seed=1234)`
 
-一旦TreasurePlay的实例创造完成，立即启动一个游戏窗口。使用W/A/S/D控制人物（蓝色小方块）在迷宫中移动。
+一旦TreasurePlay的实例创造完成，立即启动一个游戏窗口。使用W/A/S/D控制人物（蓝色小方块）在地图中移动。
 
-该类没有评测作用，仅用于帮助学生熟悉迷宫规则。
+该类仅用于帮助学生熟悉地图规则。
 
 ### `display()`
 
