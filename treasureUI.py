@@ -46,6 +46,7 @@ class Treasure:
         self.exit = (18, 9)
         self.mobs = [{"location": (5, 0), "cost": 100}, {"location": (7, 0), "cost": 150}]
         self.player = self.entrance
+        self.score = 1000
 
         self._disp: _DISP = _DISP(self)
         self._init_disp()
@@ -74,9 +75,22 @@ class Treasure:
                 if self._is_invalid_move(move):
                     return  # TODO: Error msg
 
+                delta = self._evaluate_score(move)
                 self.player = move
                 self.update_player()
 
+                if delta == "Victory":
+                    return  # TODO: win
+                else:
+                    self.score += delta
+                    self._disp.update_score(self.score)
+
+                # TODO: move mobs
+
+                # Evaluate mobs' score here
+
+                if self.score < 0:
+                    return  # TODO: lose
                 _optional_sleep()
 
         timer = threading.Timer(interval=1, function=logic_mainloop)
@@ -97,6 +111,13 @@ class Treasure:
 
         return False
 
+    def _evaluate_score(self, to):
+        x, y = to
+        if self.map[x][y] == PixelType.ROAD:
+            return -1
+        elif self.map[x][y] == PixelType.WALL:
+            return "Victory"
+
 
 class _DISP:
     def __init__(self, treasure: Treasure):
@@ -116,17 +137,11 @@ class _DISP:
                 rect = self.canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="gray55")
                 self.cells[-1].append(rect)
 
-        # self.score_notice = self.canvas.create_text(850, 10, text="探索步数", fill="gray85",
-        #                                             font=('Helvetica', '15', 'bold'), anchor=tkinter.NE)
-        # self.score = self.canvas.create_text(850, 40, text=0, fill="gray85",
-        #                                      font=('Helvetica', '21', 'bold'), anchor=tkinter.NE)
-        #
-        # self.length_notice = self.canvas.create_text(850, 80, text="路径长度", fill="green",
-        #                                              font=('Helvetica', '15', 'bold'),
-        #                                              anchor=tkinter.NE, tags="length")
-        # self.length = self.canvas.create_text(850, 110, text=0, fill="green",
-        #                                       font=('Helvetica', '21', 'bold'),
-        #                                       anchor=tkinter.NE, tags="length")
+        self.score_notice = self.canvas.create_text(850, 10, text="分数", fill="gray85",
+                                                    font=('Helvetica', '15', 'bold'), anchor=tkinter.NE)
+        self.score = self.canvas.create_text(850, 40, text=0, fill="gray85",
+                                             font=('Helvetica', '21', 'bold'), anchor=tkinter.NE)
+
         self.treasure = treasure
 
         self.player = None
@@ -158,11 +173,8 @@ class _DISP:
         elif scheme == PixelType.MOB:
             self.canvas.itemconfigure(self.cells[x][y], fill="green")
 
-    # def update_score(self, score: int):
-    #     self.canvas.itemconfigure(self.score, text=score)
-    #
-    # def update_length(self, length: int):
-    #     self.canvas.itemconfigure(self.length, text=length)
+    def update_score(self, score: int):
+        self.canvas.itemconfigure(self.score, text=score)
 
     def update_player(self, x, y):
         self.canvas.delete(self.player)
