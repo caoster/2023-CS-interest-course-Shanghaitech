@@ -11,7 +11,7 @@ LEVEL = 1
 
 def _optional_sleep():
     if WAIT:
-        time.sleep(0.05)
+        time.sleep(0.1)
 
 
 class PixelType(Enum):
@@ -73,9 +73,6 @@ class _IdleMob(_Mob):
 
 
 class _BFSMob(_Mob):
-    def __init__(self, location, cost):
-        super().__init__(location, cost)
-
     def step(self, puzzle):
         visited = []
         queue = []
@@ -102,7 +99,7 @@ class _BFSMob(_Mob):
 
 
 class Treasure:
-    def __init__(self):
+    def __init__(self, seed=1234):
         self.map = _game_map
         self.size = len(self.map), len(self.map[0])
         if type(LEVEL) == Level:
@@ -110,6 +107,7 @@ class Treasure:
         else:
             self.level = _in_class_levels[LEVEL]
 
+        self.seed = seed
         self.entrance = self.level.entrance
         self.exit = self.level.goal
         self.mobs = self._generate_mobs()
@@ -219,6 +217,9 @@ class Treasure:
         return delta
 
     def _generate_mobs(self):
+        state = random.getstate()
+        random.seed(self.seed)
+
         available_list = []
         for i in range(len(self.map)):
             for j in range(len(self.map[i])):
@@ -228,6 +229,8 @@ class Treasure:
 
         # random choose total from available_list
         locations = random.sample(available_list, len(self.level.idle + self.level.smart))
+
+        random.setstate(state)
         return ([_IdleMob(loc, cost) for loc, cost in zip(locations[:len(self.level.idle)], self.level.idle)]
                 + [_BFSMob(loc, cost) for loc, cost in zip(locations[len(self.level.idle):], self.level.smart)])
 
