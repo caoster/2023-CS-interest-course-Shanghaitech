@@ -15,12 +15,12 @@ def clear():
 
 
 def display():
-    print("------------------------------------------")
+    print("-----------------------------------------")
     for _stat in _Record.stats:
         print(_stat)
-    print("|-----------------------|----------------|")
+    print("|-----------------------|---------------|")
     print(sum(_Record.stats, _Record("", 0, False)) / len(_Record.stats))
-    print("------------------------------------------")
+    print("-----------------------------------------")
 
 
 def _optional_sleep():
@@ -82,10 +82,10 @@ class _Record:
             _Record.stats.append(self)
 
     def __str__(self):
-        return f"| Seed: {self.seed:>15} | Explore: {self.cost:>5} |"
+        return f"| Seed: {self.seed:>15} | Cost: {self.cost:>7} |"
 
     def __repr__(self):
-        return f"| Seed: {self.seed:>15} | Explore: {self.cost:>5} |"
+        return f"| Seed: {self.seed:>15} | Cost: {self.cost:>7} |"
 
     def __add__(self, other):
         return _Record("", self.cost + other.cost, False)
