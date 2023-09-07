@@ -1,6 +1,20 @@
+import threading
+import time
 from enum import Enum
 import tkinter
 from tkinter import Tk, Canvas
+
+WAIT = True
+
+
+def _optional_sleep():
+    if WAIT:
+        time.sleep(0.05)
+
+
+class PlayerAgent:
+    def step(self, puzzle):
+        raise NotImplementedError
 
 
 class PixelType(Enum):
@@ -31,26 +45,57 @@ class Treasure:
         self.entrance = (0, 0)
         self.exit = (18, 9)
         self.mobs = [{"location": (5, 0), "cost": 100}, {"location": (7, 0), "cost": 150}]
+        self.player = self.entrance
 
         self._disp: _DISP = _DISP(self)
         self._init_disp()
 
-        # TODO:
-        self.update_player(1, 0)
+        self.update_player()
+        self.update_mobs()
 
     def _init_disp(self):
         for i in range(self.size[0]):
             for j in range(self.size[1]):
                 self._disp.update(i, j, self.map[i][j])
 
-    def update_player(self, x, y):
-        self._disp.update_player(x, y)
+    def update_player(self):
+        self._disp.update_player(*self.player)
 
     def update_mobs(self):
-        pass
+        self._disp.update_mobs(self.mobs)
 
-    def start(self):
+    def start(self, agent: PlayerAgent):
+        if not isinstance(agent, PlayerAgent):
+            return  # TODO: Error msg
+
+        def logic_mainloop():
+            while True:
+                move = agent.step(self)
+                if self._is_invalid_move(move):
+                    return  # TODO: Error msg
+
+                self.player = move
+                self.update_player()
+
+                _optional_sleep()
+
+        timer = threading.Timer(interval=1, function=logic_mainloop)
+        timer.start()
         self._disp.start()
+
+    def _is_invalid_move(self, to):
+        x, y = to
+        # Index out of range
+        if x < 0 or y < 0 or x >= self.size[0] or y >= self.size[1]:
+            return True
+        # Onto walls
+        if self.map[x][y] == PixelType.WALL:
+            return True
+        # Not relative
+        if abs(x - self.player[0]) + abs(y - self.player[1]) != 1:
+            return True
+
+        return False
 
 
 class _DISP:
@@ -125,7 +170,22 @@ class _DISP:
         self.player = self.canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="blue")
 
     def update_mobs(self, mobs):
-        pass
+        for mob in self.mobs:
+            self.canvas.delete(mob)
+
+        self.mobs.clear()
+        for mob in mobs:
+            x, y = mob["location"]
+            x_start, y_start, x_end, y_end = self._get_position(x, y, True)
+            self.mobs.append(self.canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="red"))
 
 
-Treasure().start()
+class TestAgent(PlayerAgent):
+    def step(self, puzzle):
+        if puzzle.player != puzzle.entrance:
+            return puzzle.entrance
+        else:
+            return 0, 1
+
+
+Treasure().start(TestAgent())
