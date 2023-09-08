@@ -241,7 +241,7 @@ class Treasure:
         if to == self.exit:
             return "Victory"
         if self.map[x][y] == PixelType.ROAD:
-            return 1
+            return 25
 
     def _perform_mobs_move(self):
         for mob in self.mobs:
@@ -274,7 +274,8 @@ class Treasure:
         return ([_IdleMob(loc, cost) for loc, cost in zip(locations[:len(self.level.idle)], self.level.idle)]
                 + [_BFSMob(loc, cost) for loc, cost in zip(locations[len(self.level.idle):], self.level.smart)])
 
-    def surrounding(self, x: int, y: int):
+    def surrounding(self, u: [int, int]):
+        x, y = u
         result = {}
         if x > 0:
             result[(x - 1, y)] = self.map[x - 1][y]
@@ -378,7 +379,7 @@ class TreasurePlay(Treasure):
         global WAIT
         self.prev_wait = WAIT
         WAIT = False
-        self.surrounding(0, 0)
+        self.surrounding(self.entrance)
         self._disp.bind_wasd()
         self._disp.start()
         WAIT = self.prev_wait
