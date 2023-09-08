@@ -114,7 +114,7 @@ class _BFSMob(_Mob):
         current = self.location
         if current == puzzle.player:
             return current
-        init = puzzle.surrounding(*current)
+        init = puzzle.surrounding(current)
         for i in init:
             if i == puzzle.player:
                 return i
@@ -124,7 +124,7 @@ class _BFSMob(_Mob):
 
         while len(queue) != 0:
             head = queue.pop(0)
-            res = puzzle.surrounding(*head[0])
+            res = puzzle.surrounding(head[0])
             for i in res:
                 if i not in visited and res[i] != PixelType.WALL:
                     if i == puzzle.player:
