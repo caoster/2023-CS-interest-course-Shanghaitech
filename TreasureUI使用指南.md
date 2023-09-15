@@ -70,6 +70,14 @@ for i in range(5):
     treasure.start(agent)
 ```
 
+### `Treasure`类的重要属性
+
+- `Treasure.cost` 每在地图中走一步的成本，默认为1。
+- `Treasure.player` 人物当前位置，为一个`tuple`，例如`(0, 0)`。
+- `Treasure.entrance` 入口位置，为一个`tuple`，例如`(0, 0)`。
+- `Treasure.exit` 出口位置，为一个`tuple`，例如`(17, 8)`。
+- `Treasure.map` 地图，为一个二维数组，例如`[[PixelType.ROAD, PixelType.WALL], [PixelType.EXIT, PixelType.START]]`。
+
 ### 详解`Treasure.surrounding`
 
 正如上文所述，`surrounding`函数接受一个`tuple`作为参数，即一个点在地图中的坐标(左上角为(0, 0))。
@@ -154,17 +162,17 @@ display()
 
 ```text
 -----------------------------------------
-| Seed:               0 | Cost:    1250 |
-| Seed:               1 | Cost:    1350 |
-| Seed:               2 | Cost:    1200 |
-| Seed:               3 | Cost:    1250 |
-| Seed:               4 | Cost:    1100 |
+| Seed:               0 | Cost:     194 |
+| Seed:               1 | Cost:     294 |
+| Seed:               2 | Cost:     144 |
+| Seed:               3 | Cost:     194 |
+| Seed:               4 | Cost:      44 |
 |-----------------------|---------------|
-| Seed:             Sum | Cost:  1230.0 |
+| Seed:             Sum | Cost:   174.0 |
 -----------------------------------------
 ```
 
-统计数据显示，在运行了五个种子的地图(0, 1, 2, 3, 4)后，平均成本为1230.0
+统计数据显示，在运行了五个种子的地图(0, 1, 2, 3, 4)后，平均成本为174.0
 
 ### `clear()`
 
@@ -230,7 +238,7 @@ _in_class_levels = {
 Level((0, 0), (17, 8), [100], [100, 200, 150], True)
 ```
 
-在所有关卡中，移动一步的成本为25。
+在所有关卡中，移动一步的成本为1。
 第一个参数代表游戏开始的位置。
 第二个参数代表游戏出口。
 第三个参数为列表，代表“原地不动”的怪物数量和经过他们的成本。

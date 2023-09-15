@@ -9,6 +9,8 @@ from typing import Optional
 WAIT = True
 LEVEL = 1
 
+__VERSION__ = "0.0.1"
+
 
 def clear():
     _Record.stats.clear()
@@ -135,7 +137,7 @@ class _BFSMob(_Mob):
 
 class Treasure:
     def __init__(self, seed=1234):
-        self.map = _game_map
+        self._map = _game_map
         self.size = len(self.map), len(self.map[0])
         if type(LEVEL) == Level:
             self.level = LEVEL
@@ -143,17 +145,38 @@ class Treasure:
             self.level = _in_class_levels[LEVEL]
 
         self.seed = seed
-        self.entrance = self.level.entrance
-        self.exit = self.level.goal
+        self._entrance = self.level.entrance
+        self._exit = self.level.goal
         self.mobs = self._generate_mobs()
-        self.player = self.entrance
-        self._cost = 0
+        self._player = self.entrance
+        self._total_cost = 0
+        self._step_cost = 1
 
         self._disp: _DISP = _DISP(self)
         self._init_disp()
 
         self._update_player()
         self._update_mobs()
+
+    @property
+    def cost(self):
+        return self._step_cost
+
+    @property
+    def player(self):
+        return self._player
+
+    @property
+    def entrance(self):
+        return self._entrance
+
+    @property
+    def exit(self):
+        return self._exit
+
+    @property
+    def map(self):
+        return self._map
 
     def _init_disp(self):
         for i in range(self.size[0]):
@@ -189,19 +212,19 @@ class Treasure:
             return True
 
         delta = self._evaluate_cost(move)
-        self.player = move
+        self._player = move
         self._update_player()
 
         if delta == "Victory":
-            print(f"You win with cost {self._cost}")
+            print(f"You win with cost {self._total_cost}")
             return True
         else:
-            self._cost += delta
+            self._total_cost += delta
 
         self._perform_mobs_move()
 
-        self._cost += self._evaluate_mobs_cost()
-        self._disp.update_cost(self._cost)
+        self._total_cost += self._evaluate_mobs_cost()
+        self._disp.update_cost(self._total_cost)
 
         return False
 
@@ -220,7 +243,7 @@ class Treasure:
         timer = threading.Timer(interval=1, function=logic_mainloop)
         timer.start()
         self._disp.start()
-        _Record(self.seed, self._cost)
+        _Record(self.seed, self._total_cost)
 
     def _is_invalid_move(self, to):
         x, y = to
@@ -241,7 +264,7 @@ class Treasure:
         if to == self.exit:
             return "Victory"
         if self.map[x][y] == PixelType.ROAD:
-            return 25
+            return self._step_cost
 
     def _perform_mobs_move(self):
         for mob in self.mobs:
@@ -374,12 +397,12 @@ class _DISP:
 class TreasurePlay(Treasure):
     def __init__(self, seed: int = 1234):
         super().__init__(seed)
-        self.player = list(self.player)
+        self._player = list(self._player)
 
         global WAIT
         self.prev_wait = WAIT
         WAIT = False
-        self.surrounding(self.entrance)
+        self.surrounding(self._entrance)
         self._disp.bind_wasd()
         self._disp.start()
         WAIT = self.prev_wait
@@ -387,8 +410,8 @@ class TreasurePlay(Treasure):
     def _possible_position(self, x, y):
         if not (0 <= x < self.size[0] and 0 <= y < self.size[1]):
             return False
-        if (self.map[x][y] != PixelType.ROAD
-                and self.map[x][y] != PixelType.START):
+        if (self._map[x][y] != PixelType.ROAD
+                and self._map[x][y] != PixelType.START):
             return False
         return True
 
