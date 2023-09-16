@@ -262,13 +262,18 @@ class QLearningAgent(PlayerAgent):
             treasure = Treasure(seed=random.randint(0, 999999))
             treasure.start(self)
 
+
+treasureUI.DISP = False
 treasureUI.WAIT = False
+treasureUI.AUTO_CLOSE = True
 treasureUI.LEVEL = 3
 agent = QLearningAgent()
 agent.train(100)
+treasureUI.DISP = True
 
 # treasureUI.LEVEL = 3
 # treasureUI.WAIT = True
+# treasureUI.AUTO_CLOSE = True
 # treasure = Treasure()
 # agent = MiniMaxAgent()
 # treasure.start(agent)

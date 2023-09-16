@@ -1,5 +1,4 @@
 import random
-import threading
 import time
 from enum import Enum
 import tkinter
@@ -7,6 +6,8 @@ from tkinter import Tk, Canvas
 from typing import Optional
 
 WAIT = True
+DISP = True
+AUTO_CLOSE = False
 LEVEL = 1
 
 __VERSION__ = "0.0.1"
@@ -26,7 +27,7 @@ def display():
 
 
 def _optional_sleep():
-    if WAIT:
+    if WAIT and DISP:
         time.sleep(0.1)
 
 
@@ -233,15 +234,18 @@ class Treasure:
             print("Invalid agent")
             return
 
-        def logic_mainloop():
-            while True:
-                move = agent.step(self)
-                if self._process_move(move):
-                    return
-                _optional_sleep()
+        _interval_ = 1 if DISP else 0
 
-        timer = threading.Timer(interval=1, function=logic_mainloop)
-        timer.start()
+        def logic_mainloop():
+            _optional_sleep()
+            move = agent.step(self)
+            if self._process_move(move):
+                if AUTO_CLOSE:
+                    self._disp.root.destroy()
+            else:
+                self._disp.root.after(_interval_, logic_mainloop)
+
+        self._disp.root.after(0, logic_mainloop)
         self._disp.start()
         _Record(self.seed, self._total_cost)
 
@@ -396,6 +400,9 @@ class _DISP:
 
 class TreasurePlay(Treasure):
     def __init__(self, seed: int = 1234):
+        global DISP
+        assert DISP, "Cannot play in training mode"
+
         super().__init__(seed)
         self._player = list(self._player)
 
