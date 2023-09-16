@@ -65,11 +65,70 @@ class UCSAgent(PlayerAgent):
         return self.path.pop()
 
 
+class MiniMaxAgent(PlayerAgent):
+    def step(self, puzzle: Treasure):
+        def extra_cost(player, mobs):
+            total_cost = 0
+            for mob in mobs:
+                if player == mob["location"]:
+                    total_cost += mob["cost"]
+            return total_cost
+
+        def valid_next_move(location):
+            moves = puzzle.surrounding(location)
+            valid_moves = []
+            for move in moves:
+                if moves[move] == PixelType.ROAD:
+                    valid_moves.append(move)
+            return valid_moves
+
+        def max_function(player, mobs):
+            # 0. If the game can finish
+            if puzzle.exit in puzzle.surrounding(player):
+                return puzzle.exit, 0
+
+            # 1. Find all possible moves
+            moves = valid_next_move(player)
+
+            # 2. Iterate all possible moves
+            scores = {}
+            for move in moves:
+                # 3. Move player to new place and evaluate
+                _, score = min_function(move, mobs)
+                scores[move] = score - puzzle.cost - extra_cost(move, mobs)
+
+            # 4. Return the best move
+            next_best_move = max(scores, key=scores.get)
+            return next_best_move, scores[next_best_move]
+
+        def min_function(player, mobs):
+            # 1. Find all combination of new locations
+            all_combinations = []
+            for mob in mobs:
+                all_combinations.append(valid_next_move(mob["location"]) + [mob["location"]])
+
+            scores = {}
+            # 2. Try every single combination
+            from itertools import product
+            for combine in product(*all_combinations):
+                new_mobs = mobs.copy()
+                for i in range(len(new_mobs)):
+                    new_mobs[i]["location"] = combine[i]
+                # 3. Record the evaluation of new mob locations
+                _, score = max_function(player, new_mobs)
+                scores[new_mobs] = score
+
+            # 4. Return the worst move
+            next_worst_move = min(scores, key=scores.get)
+            return next_worst_move, scores[next_worst_move]
+
+        return max_function(puzzle.player, puzzle.get_mobs_info())[0]
+
+
 treasureUI.WAIT = True
-for i in range(5):
-    treasure = Treasure(seed=i)
-    agent = UCSAgent()
-    treasure.start(agent)
+treasure = Treasure()
+agent = MiniMaxAgent()
+treasure.start(agent)
 #
 # display()
 # for i in range(1, 5):
