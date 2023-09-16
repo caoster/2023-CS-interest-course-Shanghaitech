@@ -67,6 +67,20 @@ class UCSAgent(PlayerAgent):
 
 class MiniMaxAgent(PlayerAgent):
     def step(self, puzzle: Treasure):
+        MAX_DEPTH = 3
+
+        def evaluate_score(player, mobs):
+            def distance(place1, place2):
+                return abs(place1[0] - place2[0]) + abs(place1[1] - place2[1])
+
+            mob_distance = 0
+            for mob in mobs:
+                mob_distance += distance(player, mob["location"])
+            mob_distance /= len(mobs)  # "Normalize"
+
+            exit_distance = distance(player, puzzle.exit)
+            return mob_distance * 2 - exit_distance  # 对比一下有没有2倍的情况
+
         def extra_cost(player, mobs):
             total_cost = 0
             for mob in mobs:
@@ -82,32 +96,38 @@ class MiniMaxAgent(PlayerAgent):
                     valid_moves.append(move)
             return valid_moves
 
-        def max_function(player, mobs):
+        def max_function(player, mobs, depth):
             # 0. If the game can finish
             if puzzle.exit in puzzle.surrounding(player):
                 return puzzle.exit, 0
+            elif depth >= MAX_DEPTH:
+                return player, evaluate_score(player, mobs)
 
             # 1. Find all possible moves
             moves = valid_next_move(player)
 
             # 2. Iterate all possible moves
-            scores = {}
+            best_move = None
+            best_score = -999999999
             for move in moves:
                 # 3. Move player to new place and evaluate
-                _, score = min_function(move, mobs)
-                scores[move] = score - puzzle.cost - extra_cost(move, mobs)
+                _, score = min_function(move, mobs, depth)
+                score -= puzzle.cost + extra_cost(move, mobs)
+                if score > best_score:
+                    best_score = score
+                    best_move = move
 
             # 4. Return the best move
-            next_best_move = max(scores, key=scores.get)
-            return next_best_move, scores[next_best_move]
+            return best_move, best_score
 
-        def min_function(player, mobs):
+        def min_function(player, mobs, depth):
             # 1. Find all combination of new locations
             all_combinations = []
             for mob in mobs:
                 all_combinations.append(valid_next_move(mob["location"]) + [mob["location"]])
 
-            scores = {}
+            worst_move = None
+            worst_score = 999999999
             # 2. Try every single combination
             from itertools import product
             for combine in product(*all_combinations):
@@ -115,16 +135,17 @@ class MiniMaxAgent(PlayerAgent):
                 for i in range(len(new_mobs)):
                     new_mobs[i]["location"] = combine[i]
                 # 3. Record the evaluation of new mob locations
-                _, score = max_function(player, new_mobs)
-                scores[new_mobs] = score
+                _, score = max_function(player, new_mobs, depth + 1)
+                if score < worst_score:
+                    worst_score = score
+                    worst_move = new_mobs
 
             # 4. Return the worst move
-            next_worst_move = min(scores, key=scores.get)
-            return next_worst_move, scores[next_worst_move]
+            return worst_move, worst_score
 
-        return max_function(puzzle.player, puzzle.get_mobs_info())[0]
+        return max_function(puzzle.player, puzzle.get_mobs_info(), 0)[0]
 
-
+treasureUI.LEVEL = 3
 treasureUI.WAIT = True
 treasure = Treasure()
 agent = MiniMaxAgent()
