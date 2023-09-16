@@ -1,3 +1,4 @@
+import random
 import treasureUI
 from treasureUI import PlayerAgent, PixelType, Treasure, TreasurePlay, Level, display
 
@@ -145,11 +146,132 @@ class MiniMaxAgent(PlayerAgent):
 
         return max_function(puzzle.player, puzzle.get_mobs_info(), 0)[0]
 
+class ExpDijkstraAgent(PlayerAgent):
+
+    def __init__(self):
+        self.stepped = False
+
+    def init(self, puzzle: Treasure):
+        assert len(puzzle.get_mobs_info()) == 1
+        self.mob_cost = puzzle.get_mobs_info()[0]['cost']
+        self.possible_mob_location = []
+        for x in range(puzzle.size[0]):
+            for y in range(puzzle.size[1]):
+                if puzzle.map[x][y] == PixelType.ROAD or puzzle.map[x][y] == PixelType.EXIT:
+                    self.possible_mob_location.append((x, y))
+
+    def Dijkstra(self, puzzle: Treasure):
+        g = {puzzle.player: 0}
+        previous = {}
+        to_explore = [puzzle.player]
+        while len(to_explore) > 0:
+            u = min(to_explore, key=lambda u: g[u])
+            to_explore.remove(u)
+            if u == puzzle.exit:
+                path = [u]
+                while u != puzzle.player:
+                    u = previous[u]
+                    path.append(u)
+                return path[::-1]
+            for v, type_v in puzzle.surrounding(u).items():
+                if type_v == PixelType.WALL:
+                    continue
+                new_cost_v = g[u] + 1
+                if v in self.possible_mob_location:
+                    new_cost_v += self.mob_cost / len(self.possible_mob_location)
+                if v not in g:  # 这是第一条到v的路径
+                    g[v] = new_cost_v
+                    previous[v] = u
+                    to_explore.append(v)
+                elif g[v] > new_cost_v:  # 这不是第一条到v的路径，但是比之前的更短
+                    g[v] = new_cost_v
+                    previous[v] = u
+
+    def update_possible_mob_location(self, player_loc, mob_rad):
+        old_possible = self.possible_mob_location
+        self.possible_mob_location = []
+        for mob_loc in old_possible:  # 枚举怪可能的位置
+            if player_loc == mob_loc:
+                possible = (mob_rad == 1.0)
+            elif abs(player_loc[0] - mob_loc[0]) <= 1 and abs(player_loc[1] - mob_loc[1]) <= 1:
+                possible = (mob_rad == 0.5)
+            else:
+                possible = (mob_rad == 0.0)
+            if possible:  # 如果不可能，则移除该位置
+                self.possible_mob_location.append(mob_loc)
+
+    def step(self, puzzle: Treasure):
+        if not self.stepped:
+            self.stepped = True
+            self.init(puzzle)
+        self.update_possible_mob_location(puzzle.player, puzzle.get_mobs_info()[0]['radiation'])
+        path = self.Dijkstra(puzzle)  # 从puzzle.player位置开始Dijkstra
+        return path[1]  # 返回最短路的下一个位置
+
+
+class QLearningAgent(PlayerAgent):
+
+    def __init__(self):
+        self.stepped = False
+        self.s = None
+        self.a = None
+        self.alpha = 0.5
+        self.gamma = 0.9
+
+    def init(self, puzzle: Treasure):
+        assert len(puzzle.get_mobs_info()) == 1
+        self.Q = {}
+        road = []
+        for x in range(puzzle.size[0]):
+            for y in range(puzzle.size[1]):
+                if puzzle.map[x][y] != PixelType.WALL:
+                    road.append((x, y))
+        for player_loc in road:
+            for mob_loc in road:
+                s = (player_loc, mob_loc)
+                self.Q[s] = {}
+                for a, type_a in puzzle.surrounding(player_loc).items():
+                    if type_a != PixelType.WALL:
+                        self.Q[s][a] = 0.0
+
+    def step(self, puzzle: Treasure):
+        if not self.stepped:
+            self.stepped = True
+            self.init(puzzle)
+        mob = puzzle.get_mobs_info()[0]
+        s_new = (puzzle.player, mob['location'])
+        Qmax_s_new = max(self.Q[s_new].values())
+        if self.a != None:
+            reward = -1
+            if puzzle.player != self.a:  #上一局结束了，特判
+                pass
+            elif puzzle.player == mob['location']:
+                reward -= mob['cost']
+            sample = reward + self.gamma * Qmax_s_new
+            self.Q[self.s][self.a] += self.alpha * (sample - self.Q[self.s][self.a])
+        a_choices = []
+        for a in self.Q[s_new].keys():
+            if self.Q[s_new][a] == Qmax_s_new:
+                a_choices.append(a)
+        self.s = s_new
+        self.a = random.choice(a_choices)
+        return self.a
+    
+    def train(self, n):
+        for i in range(n):
+            treasure = Treasure(seed=random.randint(0, 999999))
+            treasure.start(self)
+
+treasureUI.WAIT = False
 treasureUI.LEVEL = 3
-treasureUI.WAIT = True
-treasure = Treasure()
-agent = MiniMaxAgent()
-treasure.start(agent)
+agent = QLearningAgent()
+agent.train(100)
+
+# treasureUI.LEVEL = 3
+# treasureUI.WAIT = True
+# treasure = Treasure()
+# agent = MiniMaxAgent()
+# treasure.start(agent)
 #
 # display()
 # for i in range(1, 5):
