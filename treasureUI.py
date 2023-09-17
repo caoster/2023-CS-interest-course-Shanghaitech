@@ -72,6 +72,9 @@ _game_map = [[PixelType(j) for j in i] for i in _game_map]
 class PlayerAgent:
     def step(self, puzzle):
         raise NotImplementedError
+    
+    def reward(self, puzzle):
+        raise NotImplementedError
 
 
 class _Record:
@@ -396,6 +399,44 @@ class _DISP:
         self.root.bind("<S>", self.treasure.s)
         self.root.bind("<d>", self.treasure.d)
         self.root.bind("<D>", self.treasure.d)
+
+class TreasureReward(Treasure):
+
+    def __init__(self, seed: int = 1234):
+        super().__init__(seed)
+        self.total_step = 0
+
+    def start(self, agent: PlayerAgent):
+        if not isinstance(agent, PlayerAgent):
+            print("Invalid agent")
+            return
+
+        _interval_ = 1 if DISP else 0
+
+        def logic_mainloop():
+            _optional_sleep()
+            self.total_step += 1
+            state = (self.player, self.get_mobs_info()[0]['location'])
+            move = agent.step(self)
+            last_total_cost = self._total_cost
+            reach_exit = self._process_move(move)
+            state_new = (self.player, self.get_mobs_info()[0]['location'])
+            if reach_exit:  # success, reward 100
+                agent.reward(state, move, state_new, last_total_cost - self._total_cost+ 100)
+                if AUTO_CLOSE:
+                    self._disp.root.destroy()
+            elif self.total_step >= 100:  # total step too large
+                print('Too many steps! Game over.')
+                agent.reward(state, move, state_new, last_total_cost - self._total_cost)
+                if AUTO_CLOSE:
+                    self._disp.root.destroy()
+            else:
+                agent.reward(state, move, state_new, last_total_cost - self._total_cost)
+                self._disp.root.after(_interval_, logic_mainloop)
+
+        self._disp.root.after(0, logic_mainloop)
+        self._disp.start()
+        _Record(self.seed, self._total_cost)
 
 
 class TreasurePlay(Treasure):

@@ -1,6 +1,6 @@
 import random
 import treasureUI
-from treasureUI import PlayerAgent, PixelType, Treasure, TreasurePlay, Level, display
+from treasureUI import PlayerAgent, PixelType, Treasure, TreasureReward, TreasurePlay, Level, display
 
 
 class DFSAgent(PlayerAgent):
@@ -213,10 +213,8 @@ class QLearningAgent(PlayerAgent):
 
     def __init__(self):
         self.stepped = False
-        self.s = None
-        self.a = None
-        self.alpha = 0.5
-        self.gamma = 0.9
+        self.alpha = None
+        self.gamma = None
 
     def init(self, puzzle: Treasure):
         assert len(puzzle.get_mobs_info()) == 1
@@ -228,52 +226,58 @@ class QLearningAgent(PlayerAgent):
                     road.append((x, y))
         for player_loc in road:
             for mob_loc in road:
-                s = (player_loc, mob_loc)
-                self.Q[s] = {}
-                for a, type_a in puzzle.surrounding(player_loc).items():
-                    if type_a != PixelType.WALL:
-                        self.Q[s][a] = 0.0
+                state = (player_loc, mob_loc)
+                self.Q[state] = {}
+                for action, type_action in puzzle.surrounding(player_loc).items():
+                    if type_action != PixelType.WALL:
+                        self.Q[state][action] = 0.0
 
     def step(self, puzzle: Treasure):
         if not self.stepped:
             self.stepped = True
             self.init(puzzle)
         mob = puzzle.get_mobs_info()[0]
-        s_new = (puzzle.player, mob['location'])
-        Qmax_s_new = max(self.Q[s_new].values())
-        if self.a != None:
-            reward = -1
-            if puzzle.player != self.a:  #上一局结束了，特判
-                pass
-            elif puzzle.player == mob['location']:
-                reward -= mob['cost']
-            sample = reward + self.gamma * Qmax_s_new
-            self.Q[self.s][self.a] += self.alpha * (sample - self.Q[self.s][self.a])
-        a_choices = []
-        for a in self.Q[s_new].keys():
-            if self.Q[s_new][a] == Qmax_s_new:
-                a_choices.append(a)
-        self.s = s_new
-        self.a = random.choice(a_choices)
-        return self.a
+        state = (puzzle.player, mob['location'])
+        Qmax_state = max(self.Q[state].values())
+        action_choices = []
+        for action in self.Q[state].keys():
+            if self.Q[state][action] == Qmax_state:
+                action_choices.append(action)
+        return random.choice(action_choices)
     
+    def reward(self, state, action, state_new, value):
+        sample = value + self.gamma * max(self.Q[state_new].values())
+        self.Q[state][action] += self.alpha * (sample - self.Q[state][action])
+
     def train(self, n):
+        treasureUI.DISP = False
+        treasureUI.WAIT = False
+        treasureUI.AUTO_CLOSE = True
+        self.alpha = 0.5
+        self.gamma = 0.9
         for i in range(n):
-            treasure = Treasure(seed=random.randint(0, 999999))
+            treasure = TreasureReward(seed=random.randint(0, 999999))
             treasure.start(self)
 
+    def test(self, n):
+        treasureUI.DISP = True
+        treasureUI.WAIT = True
+        treasureUI.AUTO_CLOSE = False
+        self.alpha = 0.0
+        self.gamma = 0.0
+        for i in range(n):
+            treasure = TreasureReward(seed=random.randint(0, 999999))
+            treasure.start(self)
 
-treasureUI.DISP = False
-treasureUI.WAIT = False
-treasureUI.AUTO_CLOSE = True
 treasureUI.LEVEL = 3
 agent = QLearningAgent()
-agent.train(100)
-treasureUI.DISP = True
+agent.train(1000)
+agent.test(10)
 
-# treasureUI.LEVEL = 3
+# treasureUI.DISP = True
 # treasureUI.WAIT = True
 # treasureUI.AUTO_CLOSE = True
+# treasureUI.LEVEL = 3
 # treasure = Treasure()
 # agent = MiniMaxAgent()
 # treasure.start(agent)
