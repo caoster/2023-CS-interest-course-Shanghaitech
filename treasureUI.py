@@ -73,7 +73,7 @@ class PlayerAgent:
     def step(self, puzzle):
         raise NotImplementedError
     
-    def reward(self, puzzle):
+    def reward(self, state, action, state_new, value):
         raise NotImplementedError
 
 
@@ -121,7 +121,9 @@ class _BFSMob(_Mob):
         if current == puzzle.player:
             return current
         init = puzzle.surrounding(current)
-        for i in init:
+        init_list = list(init)
+        random.shuffle(init_list)
+        for i in init_list:
             if i == puzzle.player:
                 return i
             visited.append(i)
