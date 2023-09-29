@@ -68,7 +68,10 @@ class UCSAgent(PlayerAgent):
 
 class MiniMaxAgent(PlayerAgent):
     def step(self, puzzle: Treasure):
-        MAX_DEPTH = 3
+        memory = {}
+        # Key: (player, mob, depth)
+        # Value: (best_score, best_move)
+        MAX_DEPTH = 5
 
         def evaluate_score(player, mob):
             def distance(place1, place2):
@@ -106,14 +109,18 @@ class MiniMaxAgent(PlayerAgent):
             best_move = None
             best_score = -999999999
             for move in moves:
-                # 3. Move player to new place and evaluate
-                _, score = min_function(move, mob, depth)
+                if (move, mob["location"], depth) in memory:
+                    _, score = memory[(move, mob["location"], depth)]
+                else:
+                    # 3. Move player to new place and evaluate
+                    _, score = min_function(move, mob, depth)
                 score -= puzzle.cost + extra_cost(move, mob)
                 if score > best_score:
                     best_score = score
                     best_move = move
 
             # 4. Return the best move
+            memory[(player, mob["location"], depth)] = (best_move, best_score)
             return best_move, best_score
 
         def min_function(player, mob, depth):
