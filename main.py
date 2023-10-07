@@ -68,7 +68,7 @@ class UCSAgent(PlayerAgent):
 
 class MiniMaxAgent(PlayerAgent):
     def step(self, puzzle: Treasure):
-        MAX_DEPTH = 3
+        MAX_DEPTH = 8
 
         def evaluate_score(player, mob):
             def distance(place1, place2):
@@ -107,7 +107,7 @@ class MiniMaxAgent(PlayerAgent):
             best_score = -999999999
             for move in moves:
                 # 3. Move player to new place and evaluate
-                _, score = min_function(move, mob, depth)
+                _, score = min_function(move, mob, depth + 1)
                 score -= puzzle.cost + extra_cost(move, mob)
                 if score > best_score:
                     best_score = score
@@ -139,6 +139,85 @@ class MiniMaxAgent(PlayerAgent):
         assert len(puzzle.get_mobs_info()) == 1
         return max_function(puzzle.player, puzzle.get_mobs_info()[0], 0)[0]
 
+class MinMaxAgent(PlayerAgent):
+
+    def __init__(self):
+        self.stepped = False
+        self.puzzle: Treasure = None
+        self.depth_limit = 5
+
+    def payoff(self, state):
+        return -state[2]
+
+    def h(self, state):
+
+        def distance(u, v):
+            return abs(u[0] - v[0]) + abs(u[1] - v[1])
+
+        mob_distance = distance(state[0], state[1])
+        exit_distance = distance(state[0], self.puzzle.exit)
+        return -state[2] + 2 * mob_distance - exit_distance
+
+    def player_actions_from(self, state):
+        if state[0] == self.puzzle.exit:
+            return []
+        else:
+            list_action = []
+            for v, type_v in self.puzzle.surrounding(state[0]).items():
+                if type_v != PixelType.WALL:
+                    list_action.append(v)
+            return list_action
+
+    def mob_actions_from(self, state):
+        list_action = [state[1]]
+        for v, type_v in self.puzzle.surrounding(state[1]).items():
+            if type_v != PixelType.WALL:
+                list_action.append(v)
+        return list_action
+
+    def player_next_state(self, state, action):
+        return (action, state[1], state[2]+1)
+
+    def mob_next_state(self, state, action):
+        if state[0] == state[1]:
+            return (state[0], action, state[2]+self.puzzle.get_mobs_info()[0]['cost'])
+        else:
+            return (state[0], action, state[2])
+
+    def max_function(self, state, depth):
+        list_action = self.player_actions_from(state)
+        if list_action == []:
+            return self.payoff(state), None
+        elif depth == self.depth_limit:
+            return self.h(state), None
+        else:
+            max_payoff, max_action = None, None
+            for action in list_action:
+                next_payoff = self.min_function(self.player_next_state(state, action), depth+1)[0]
+                if max_payoff == None or max_payoff < next_payoff:
+                    max_payoff, max_action = next_payoff, action
+            return max_payoff, max_action
+
+    def min_function(self, state, depth):
+        list_action = self.mob_actions_from(state)
+        if list_action == []:
+            return self.payoff(state), None
+        elif depth == self.depth_limit:
+            return self.h(state), None
+        else:
+            min_payoff, min_action = None, None
+            for action in list_action:
+                next_payoff = self.max_function(self.mob_next_state(state, action), depth+1)[0]
+                if min_payoff == None or min_payoff > next_payoff:
+                    min_payoff, min_action = next_payoff, action
+            return min_payoff, min_action
+
+    def step(self, puzzle: Treasure):
+        if not self.stepped:
+            self.stepped = True
+            self.puzzle = puzzle
+        state = (puzzle.player, puzzle.get_mobs_info()[0]['location'], 0)
+        return self.max_function(state, 1)[1]
 
 class ExpDijkstraAgent(PlayerAgent):
 
@@ -273,9 +352,8 @@ class QLearningAgent(PlayerAgent):
 # treasureUI.WAIT = True
 # treasureUI.AUTO_CLOSE = True
 treasureUI.LEVEL = 3
-treasure = Treasure()
-agent = MiniMaxAgent()
-treasure.start(agent)
+for i in range(0, 10):
+    Treasure(seed=i).start(MiniMaxAgent())
 #
 # display()
 # for i in range(1, 5):
