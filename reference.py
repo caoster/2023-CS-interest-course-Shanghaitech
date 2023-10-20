@@ -139,10 +139,14 @@ class MinMaxAgent(PlayerAgent):
         return list_action
 
     def player_next_state(self, state, action):
-        return (action, state[1], state[2]+1)
+        
+        if state[0] != state[1] and action == state[1]:
+            return (action, state[1], state[2]+1+self.puzzle.get_mobs_info()[0]['cost'])
+        else:
+            return (action, state[1], state[2]+1)
 
     def mob_next_state(self, state, action):
-        if state[0] == state[1]:
+        if state[0] != state[1] and state[0] == action:
             return (state[0], action, state[2]+self.puzzle.get_mobs_info()[0]['cost'])
         else:
             return (state[0], action, state[2])
