@@ -49,7 +49,7 @@ class Level:
 
 _in_class_levels = {
     1: Level((0, 0), (17, 8), [100, 150], [], True),
-    2: Level((0, 0), (17, 8), [100, 150], [], False),
+    2: Level((0, 0), (17, 8), [100], [], False),
     3: Level((0, 0), (17, 8), [], [100], True),
 }
 

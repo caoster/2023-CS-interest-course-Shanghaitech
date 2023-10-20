@@ -20,7 +20,7 @@ class MinMaxAgent(PlayerAgent):
 
         mob_distance = distance(state[0], state[1])
         exit_distance = distance(state[0], self.puzzle.exit)
-        return -state[2] + 2 * mob_distance - exit_distance
+        return -state[2] - self.puzzle.get_mobs_info()[0]['cost'] // (mob_distance + 1) - exit_distance
 
     def player_actions_from(self, state):
         if state[0] == self.puzzle.exit:
