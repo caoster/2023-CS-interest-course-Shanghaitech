@@ -51,7 +51,12 @@ class UCSAgent(PlayerAgent):
             for v, type_v in puzzle.surrounding(u).items():
                 if type_v == PixelType.WALL:
                     continue
-                new_cost_v = g[u] + 1 + sum(mob['cost'] for mob in puzzle.get_mobs_info() if mob['location'] == v)
+                # new_cost_v = g[u] + 1 + sum(mob['cost']
+                #                             for mob in puzzle.get_mobs_info() if mob['location'] == v)
+                new_cost_v = g[u] + 25
+                for mob in puzzle.get_mobs_info():
+                    if mob['location'] == v:
+                        new_cost_v += mob['cost']
                 if v not in g:  # 这是第一条到v的路径
                     g[v] = new_cost_v
                     previous[v] = u
@@ -66,160 +71,71 @@ class UCSAgent(PlayerAgent):
         return self.path.pop()
 
 
-class MiniMaxAgent(PlayerAgent):
-    def step(self, puzzle: Treasure):
-        MAX_DEPTH = 8
+# class ExpectationGBSAgent(PlayerAgent):
 
-        def evaluate_score(player, mob):
-            def distance(place1, place2):
-                return abs(place1[0] - place2[0]) + abs(place1[1] - place2[1])
+#     def __init__(self):
+#         self.stepped = False
 
-            mob_distance = distance(player, mob["location"])
-            exit_distance = distance(player, puzzle.exit)
-            
-            return -puzzle.get_mobs_info()[0]['cost'] // (mob_distance + 1) - exit_distance
-            # return mob_distance * 2 - exit_distance
+#     def init(self, puzzle: Treasure):
+#         possible_mob_location = []
+#         for x in range(puzzle.size[0]):
+#             for y in range(puzzle.size[1]):
+#                 if puzzle.map[x][y] == PixelType.ROAD or puzzle.map[x][y] == PixelType.EXIT:
+#                     possible_mob_location.append((x, y))
+#         mob_num = len(puzzle.get_mobs_info())
+#         possible_all_mob_locations = itertools.product(*[possible_mob_location] * mob_num)
+#         self.h = {}
+#         for mob_locations in possible_all_mob_locations:
+#             # 从终点开始的Dijkstra，记录位置为mob_locations时每个点到终点的最小距离
+#             g = {puzzle.exit: 0}
+#             previous = {}
+#             to_explore = [puzzle.exit]
+#             while len(to_explore) > 0:
+#                 u = min(to_explore, key=lambda u: g[u])
+#                 to_explore.remove(u)
+#                 for v, type_v in puzzle.surrounding(u).items():
+#                     if type_v == PixelType.WALL:
+#                         continue
+#                     new_cost_v = g[u] + 25
+#                     for mob, mob_loc in zip(puzzle.get_mobs_info(), mob_locations):
+#                         if mob_loc == v:
+#                             new_cost_v += mob['cost']
+#                     if v not in g:  # 这是第一条到v的路径
+#                         g[v] = new_cost_v
+#                         previous[v] = u
+#                         to_explore.append(v)
+#                     elif g[v] > new_cost_v:  # 这不是第一条到v的路径，但是比之前的更短
+#                         g[v] = new_cost_v
+#                         previous[v] = u
+#             self.h[mob_locations] = g
 
-        def extra_cost(player, mob):
-            if player == mob["location"]:
-                return mob["cost"]
-            else:
-                return 0
+#     def step(self, puzzle: Treasure):
+#         if self.stepped == False:
+#             self.stepped = True
+#             self.init(puzzle)
+#         expectation = {}
+#         for v, type_v in puzzle.surrounding(puzzle.player).items():
+#             if type_v != PixelType.WALL:
+#                 expectation[v] = 0
+#         for mob_locations in list(self.h.keys()):
+#             possible = True
+#             for mob, mob_loc in zip(puzzle.get_mobs_info(), mob_locations):
+#                 if puzzle.player == mob_loc:
+#                     mob_rad = 1.0
+#                 elif abs(puzzle.player[0] - mob_loc[0]) <= 1 and abs(puzzle.player[1] - mob_loc[1]) <= 1:
+#                     mob_rad = 0.5
+#                 else:
+#                     mob_rad = 0.0
+#                 if mob_rad != mob['radiation']:
+#                     possible = False
+#                     break
+#             if possible:
+#                 for v in expectation.keys():
+#                     expectation[v] += self.h[mob_locations][v]
+#             else:
+#                 self.h.pop(mob_locations)
+#         return min(expectation.keys(), key=lambda v: expectation[v])
 
-        def valid_next_move(location):
-            moves = puzzle.surrounding(location)
-            valid_moves = []
-            for move in moves:
-                if moves[move] == PixelType.ROAD:
-                    valid_moves.append(move)
-            return valid_moves
-
-        def max_function(player, mob, depth):
-            # 0. If the game can finish
-            if puzzle.exit in puzzle.surrounding(player):
-                return puzzle.exit, 0
-            elif depth >= MAX_DEPTH:
-                return player, evaluate_score(player, mob)
-
-            # 1. Find all possible moves
-            moves = valid_next_move(player)
-
-            # 2. Iterate all possible moves
-            best_move = None
-            best_score = -999999999
-            for move in moves:
-                # 3. Move player to new place and evaluate
-                _, score = min_function(move, mob, depth + 1)
-                score -= puzzle.cost + extra_cost(move, mob)
-                if score > best_score:
-                    best_score = score
-                    best_move = move
-
-            # 4. Return the best move
-            return best_move, best_score
-
-        def min_function(player, mob, depth):
-            # 1. Find all possible mob moves
-            all_moves = [mob["location"]] + valid_next_move(mob["location"])
-
-            # 2. Iterate all possible moves
-            worst_move = None
-            worst_score = 999999999
-
-            for move in all_moves:
-                new_mob = mob.copy()
-                new_mob["location"] = move
-                # 3. Record the evaluation of new mob locations
-                _, score = max_function(player, new_mob, depth + 1)
-                if score < worst_score:
-                    worst_score = score
-                    worst_move = move
-
-            # 4. Return the worst move
-            return worst_move, worst_score
-
-        assert len(puzzle.get_mobs_info()) == 1
-        return max_function(puzzle.player, puzzle.get_mobs_info()[0], 0)[0]
-
-class MinMaxAgent(PlayerAgent):
-
-    def __init__(self):
-        self.stepped = False
-        self.puzzle: Treasure = None
-        self.depth_limit = 5
-
-    def payoff(self, state):
-        return -state[2]
-
-    def h(self, state):
-
-        def distance(u, v):
-            return abs(u[0] - v[0]) + abs(u[1] - v[1])
-
-        mob_distance = distance(state[0], state[1])
-        exit_distance = distance(state[0], self.puzzle.exit)
-        return -state[2] - self.puzzle.get_mobs_info()[0]['cost'] // (mob_distance + 1) - exit_distance
-
-    def player_actions_from(self, state):
-        if state[0] == self.puzzle.exit:
-            return []
-        else:
-            list_action = []
-            for v, type_v in self.puzzle.surrounding(state[0]).items():
-                if type_v != PixelType.WALL:
-                    list_action.append(v)
-            return list_action
-
-    def mob_actions_from(self, state):
-        list_action = [state[1]]
-        for v, type_v in self.puzzle.surrounding(state[1]).items():
-            if type_v != PixelType.WALL:
-                list_action.append(v)
-        return list_action
-
-    def player_next_state(self, state, action):
-        return (action, state[1], state[2]+1)
-
-    def mob_next_state(self, state, action):
-        if state[0] == state[1]:
-            return (state[0], action, state[2]+self.puzzle.get_mobs_info()[0]['cost'])
-        else:
-            return (state[0], action, state[2])
-
-    def max_function(self, state, depth):
-        list_action = self.player_actions_from(state)
-        if list_action == []:
-            return self.payoff(state), None
-        elif depth == self.depth_limit:
-            return self.h(state), None
-        else:
-            max_payoff, max_action = None, None
-            for action in list_action:
-                next_payoff = self.min_function(self.player_next_state(state, action), depth+1)[0]
-                if max_payoff == None or max_payoff < next_payoff:
-                    max_payoff, max_action = next_payoff, action
-            return max_payoff, max_action
-
-    def min_function(self, state, depth):
-        list_action = self.mob_actions_from(state)
-        if list_action == []:
-            return self.payoff(state), None
-        elif depth == self.depth_limit:
-            return self.h(state), None
-        else:
-            min_payoff, min_action = None, None
-            for action in list_action:
-                next_payoff = self.max_function(self.mob_next_state(state, action), depth+1)[0]
-                if min_payoff == None or min_payoff > next_payoff:
-                    min_payoff, min_action = next_payoff, action
-            return min_payoff, min_action
-
-    def step(self, puzzle: Treasure):
-        if not self.stepped:
-            self.stepped = True
-            self.puzzle = puzzle
-        state = (puzzle.player, puzzle.get_mobs_info()[0]['location'], 0)
-        return self.max_function(state, 1)[1]
 
 class ExpDijkstraAgent(PlayerAgent):
 
@@ -227,6 +143,7 @@ class ExpDijkstraAgent(PlayerAgent):
         self.stepped = False
 
     def init(self, puzzle: Treasure):
+        assert len(puzzle.get_mobs_info()) == 1
         self.mob_cost = puzzle.get_mobs_info()[0]['cost']
         self.possible_mob_location = []
         for x in range(puzzle.size[0]):
@@ -281,6 +198,91 @@ class ExpDijkstraAgent(PlayerAgent):
         self.update_possible_mob_location(puzzle.player, puzzle.get_mobs_info()[0]['radiation'])
         path = self.Dijkstra(puzzle)  # 从puzzle.player位置开始Dijkstra
         return path[1]  # 返回最短路的下一个位置
+
+
+class MinMaxAgent(PlayerAgent):
+
+    def __init__(self):
+        self.stepped = False
+        self.puzzle: Treasure = None
+        self.depth_limit = 9
+
+    def payoff(self, state):
+        return -state[2]
+
+    def h(self, state):
+
+        def distance(u, v):
+            return abs(u[0] - v[0]) + abs(u[1] - v[1])
+
+        mob_distance = distance(state[0], state[1])
+        exit_distance = distance(state[0], self.puzzle.exit)
+        return -state[2] + mob_distance * 2 - exit_distance
+
+    def player_actions_from(self, state):
+        if state[0] == self.puzzle.exit:
+            return []
+        else:
+            list_action = []
+            for v, type_v in self.puzzle.surrounding(state[0]).items():
+                if type_v != PixelType.WALL:
+                    list_action.append(v)
+            return list_action
+
+    def mob_actions_from(self, state):
+        list_action = [state[1]]
+        for v, type_v in self.puzzle.surrounding(state[1]).items():
+            if type_v != PixelType.WALL:
+                list_action.append(v)
+        return list_action
+
+    def player_next_state(self, state, action):
+        return (action, state[1], state[2]+1)
+
+    def mob_next_state(self, state, action):
+        if state[0] == state[1]:
+            return (state[0], action, state[2]+self.puzzle.get_mobs_info()[0]['cost'])
+        else:
+            return (state[0], action, state[2])
+
+    def max_function(self, state, depth):
+        list_action = self.player_actions_from(state)
+        if list_action == []:
+            return self.payoff(state), None
+        elif depth == self.depth_limit:
+            return self.h(state), None
+        else:
+            #print('    '*(depth-1)+'player', state)
+            max_payoff, max_action = None, None
+            for action in list_action:
+                next_payoff = self.min_function(self.player_next_state(state, action), depth+1)[0]
+                #print('    '*(depth-1)+'player', next_payoff, self.player_next_state(state, action))
+                if max_payoff == None or max_payoff < next_payoff:
+                    max_payoff, max_action = next_payoff, action
+            return max_payoff, max_action
+
+    def min_function(self, state, depth):
+        list_action = self.mob_actions_from(state)
+        if list_action == []:
+            return self.payoff(state), None
+        elif depth == self.depth_limit:
+            return self.h(state), None
+        else:
+            #print('    '*(depth-1)+'mob   ', state)
+            min_payoff, min_action = None, None
+            for action in list_action:
+                next_payoff = self.max_function(self.mob_next_state(state, action), depth+1)[0]
+                #print('    '*(depth-1)+'mob   ', next_payoff, self.mob_next_state(state, action))
+                if min_payoff == None or min_payoff > next_payoff:
+                    min_payoff, min_action = next_payoff, action
+            return min_payoff, min_action
+
+    def step(self, puzzle: Treasure):
+        if not self.stepped:
+            self.stepped = True
+            self.puzzle = puzzle
+        state = (puzzle.player, puzzle.get_mobs_info()[0]['location'], 0)
+        return self.max_function(state, 1)[1]
 
 
 class QLearningAgent(PlayerAgent):
@@ -343,18 +345,18 @@ class QLearningAgent(PlayerAgent):
             treasure = TreasureReward(seed=random.randint(0, 999999))
             treasure.start(self)
 
-
 # treasureUI.LEVEL = 3
 # agent = QLearningAgent()
 # agent.train(1000)
 # agent.test(10)
+
 
 # treasureUI.DISP = True
 # treasureUI.WAIT = True
 # treasureUI.AUTO_CLOSE = True
 treasureUI.LEVEL = 3
 for i in range(0, 10):
-    Treasure(seed=i).start(MiniMaxAgent())
+    Treasure(seed=i).start(MinMaxAgent())
 #
 # display()
 # for i in range(1, 5):
