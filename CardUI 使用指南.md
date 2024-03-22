@@ -1,6 +1,5 @@
 # CardUI 使用指南
 
-**Warning:** CardUI是一套专为本课程专门开发的UI，具有简单易懂的特点，学生在后续的学习过程中**不**应该以该代码作为规范，将该代码进行移植后得到的表现将无法预料。
 
 ## 依赖
 
@@ -37,15 +36,15 @@ pass
 也就是说，以下代码将会有如下表现：
 
 ```python
-display(0, [3, 5, 7])
+display(1, [3, 5, 7])
 # 此时左上角出现红桃3，红桃5，红桃7三张牌
-display(3, [2, 5, 9])
+display(4, [2, 5, 9])
 # 此时左上角保留红桃3，红桃5，红桃7三张牌
 # 右下角出现红桃2，红桃5，红桃9三张牌
-display(0, [2, 2, 2, 2])
+display(1, [2, 2, 2, 2])
 # 此时左上角的三张牌被替换为四张红桃2
 # 右下角的红桃2，红桃5，红桃9三张牌得以保留
-display(3, [])
+display(4, [])
 # 此时左上角的四张红桃2依然保留
 # 右下角清空
 ```
@@ -67,8 +66,6 @@ start(new_card, sort_card=None, search_card=None, target_card=None)
 第三个可选参数`targe_card`：搜索的目标，应当是包含卡牌的列表。如果提供了该参数，他会以卡牌的形式显示在右上方，并且当点击搜索时，会以第二个参数传入`search_card`。
 
 ## `game`
-
-该模块在课程中以extension的形式下发，在该框架中进行了简单整合。你再也不需要`from cardUI_extension import game`了。
 
 ```python
 game(new_card, your, opponent=None):
@@ -116,23 +113,3 @@ class Card:
 ```
 
 但是由于课程容量限制，我们讲不到`class`，更别提这些乱七八糟的魔法变量和魔法函数了。所以仅供参考。
-
-### 为什么你写的库这么难懂
-
-首先你需要确保你已经学会了包括但不限于`dict`，`class`，运算符重载，类的继承等`python`核心内容。
-
-然后希望你理解一般的设计范式：`mainloop`是什么，`View-Model`模型是什么，为什么要写类型提示，如何进行异常处理。
-
-到了这里你应该已经会了很多了，在代码中随处可见的magic number: `_EMPTY_CARD = random.randint(0x3b0a73, 0x649168c2a) + 0x6abc5826`，到处乱飞的异常处理，视图和模型混杂的代码框架，以及前后不统一的设计：
-
-```python
-# 为什么display()是运算符而start()是函数呢？
-display = _DISP()
-def start(new_card, your, opponent=None):
-    return display.start(new_card, your, opponent)
-# 因为设计的时候比较仓促，最后没空改了
-```
-
-如果确实需要一个例子，现在（2023年6月13日）我自认为还说得过去的一个`python`工程在[这里](https://github.com/caoster/CS181-Final-Project)，希望多加批评指正！
-
-

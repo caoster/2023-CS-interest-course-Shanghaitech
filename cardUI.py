@@ -138,21 +138,9 @@ class _DISP:
         self.root.update()
         return
 
-    def __call__(self, *args, **kwargs):
-        if len(args) != 2:
-            print("display() 应当接受两个参数，第一个为展示的位置，第二个为要展示的列表")
-            return
-        if type(args[0]) != int:
-            print("display() 第一个参数为展示的位置，类型应当为<int>")
-            return
-        if type(args[1]) != list:
-            print("display() 第二个参数为展示的列表，类型应当为<list>")
-            return
-        self._draw(args[0], args[1])
-
     def _new_cards(self):
         self.current_cards = self.new_card_func()
-        self(1, self.current_cards)
+        self.display(1, self.current_cards)
 
     def _sort_cards(self):
         if len(self.current_cards) == 0:
@@ -162,7 +150,7 @@ class _DISP:
             print("没有实现排序功能")
             return None
         self.current_cards = self.sort_card_func(self.current_cards)
-        self(1, self.current_cards)
+        self.display(1, self.current_cards)
 
     def _search_cards(self):
         if len(self.current_cards) == 0:
@@ -174,7 +162,7 @@ class _DISP:
         if self.target_card is None:
             self.target_card = [list(t) for t in zip([random.randint(1, 14)] * 2, random.sample(range(4), k=2))]
             print(f"随机选择查找: {self.target_card}")
-            self(2, self.target_card)
+            self.display(2, self.target_card)
         results = self.search_card_func(self.current_cards, self.target_card)
         disp_cards = []
         for result in results:
@@ -185,7 +173,7 @@ class _DISP:
             disp_cards.pop()
         while len(disp_cards) < 10:
             disp_cards.append(_EMPTY_CARD)
-        self(3, disp_cards)
+        self.display(3, disp_cards)
 
     def _canvas_on_click(self, event):
         if 650 < event.x < 750:
@@ -206,7 +194,7 @@ class _DISP:
 
         self.canvas.delete("card_1", "card_2", "card_3", "card_4", "misc")
         if self.target_card is not None:
-            self(2, self.target_card)
+            self.display(2, self.target_card)
         self.canvas.create_text(300, 20, text="发牌 / 排序", fill="White",
                                 font='Helvetica 24 bold', tags="card", anchor="n")
         self.canvas.create_rectangle((30, 50), (600, 225), outline="White")
@@ -341,6 +329,18 @@ class _DISP:
         self.root.after(0, self._game_logic)
         self.root.mainloop()
 
+    def display(self, *args):
+        if len(args) != 2:
+            print("display() 应当接受两个参数，第一个为展示的位置，第二个为要展示的列表")
+            return
+        if type(args[0]) != int:
+            print("display() 第一个参数为展示的位置，类型应当为<int>")
+            return
+        if type(args[1]) != list:
+            print("display() 第二个参数为展示的列表，类型应当为<list>")
+            return
+        self._draw(args[0], args[1])
+
 
 def _first_is_larger(card1, card2):
     if type(card1) != list or type(card2) != list \
@@ -377,12 +377,16 @@ def _first_is_larger(card1, card2):
         print("无效的牌型：必须是对子或顺子")
 
 
-display = _DISP()
+cardUI = _DISP()
 
 
-def start(new_card, your, opponent=None):
-    return display.start(new_card, your, opponent)
+def display(*args, **kwargs):
+    return cardUI.display(*args)
+
+
+def start(new_card, sort_card=None, search_card=None, target_card=None):
+    return cardUI.start(new_card, sort_card, search_card, target_card)
 
 
 def game(new_card, your, opponent=None):
-    return display.game(new_card, your, opponent)
+    return cardUI.game(new_card, your, opponent)
