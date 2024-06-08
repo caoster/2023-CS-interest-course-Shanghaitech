@@ -365,10 +365,10 @@ def _first_is_larger(card1, card2):
     if 3 <= len(pts1) == len(set(pts1)):
         # 顺子
         for i in range(len(pts1) - 1):
-            if pts1[i] != pts1[i] - 1:
+            if pts1[i] != pts1[i + 1] - 1:
                 print("无效的牌型：必须是对子或顺子")
         for i in range(len(pts2) - 1):
-            if pts2[i] != pts2[i] - 1:
+            if pts2[i] != pts2[i + 1] - 1:
                 print("牌型必须是对子或顺子，对子和顺子无法比较")
         return pts1[0] > pts2[0]
     elif len(set(pts1)) == 1:
