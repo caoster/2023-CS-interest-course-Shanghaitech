@@ -29,7 +29,6 @@ def dfs(maze: Maze):
                     return head[1] + [i]
                 visited.append(i)
                 stack.append((i, head[1] + [i]))
-        print(head)
 
 
 def bfs(maze: Maze):
@@ -50,7 +49,6 @@ def bfs(maze: Maze):
                     return head[1] + [i]
                 visited.append(i)
                 queue.append((i, head[1] + [i]))
-        print(head)
 
 
 mazeUI.WAIT = False
@@ -62,4 +60,4 @@ for i in range(5):
 
 display_result()
 
-# MazePlay()
+MazePlay()

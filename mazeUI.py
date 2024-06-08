@@ -199,7 +199,7 @@ class Maze:
                     self._mask[i][j] = True
                     self._explored[i][j] = True
 
-        self._disp: _DISP = _DISP(self)
+        self._disp: _DISP = _DISP(self, size)
         self._init_disp()
 
     def start(self, strategy: callable):
@@ -321,7 +321,7 @@ class Maze:
 
 
 class _DISP:
-    def __init__(self, maze: Maze):
+    def __init__(self, maze: Maze, size: tuple[int, int]):
         self.root = Tk(className="Maze")
         self.root.resizable(False, False)
         # self.root.bind("<Escape>", lambda _: self.root.destroy())
@@ -329,11 +329,12 @@ class _DISP:
         self.maze_canvas = Canvas(self.root, width=850, height=450, background="#000")
         self.maze_canvas.pack()
         self.maze_canvas.place(relx=0.5, rely=0.5, anchor=tkinter.CENTER)
+        self.size = size
 
         self.cells = []
-        for x in range(49):
+        for x in range(size[0]):
             self.cells.append([])
-            for y in range(29):
+            for y in range(size[1]):
                 x_start, y_start, x_end, y_end = self._get_position(x, y)
                 rect = self.maze_canvas.create_rectangle(x_start, y_start, x_end, y_end, fill="gray55")
                 self.cells[-1].append(rect)
@@ -354,16 +355,22 @@ class _DISP:
         # Display person in `MazePlay` mode
         self.person = None
 
-    @staticmethod
-    def _get_position(x, y, small=False):
+    def _get_position(self, x, y, small=False):
+        size = self.size
+        scale = min(49 / size[0], 29 / size[1])
+        if scale > 1.0:
+            scale = 1.0 + (scale - 1.0) * (2 / 3)
         side = 15
-        offset = 7
+        side *= scale
+        offset_x = 375 - size[0] * side / 2
+        offset_y = (225 - size[1] * side / 2) * (2 / 3)
         smaller = 4
+        smaller *= scale
         if small:
-            return x * side + offset + smaller, y * side + offset + smaller, \
-                   x * side + offset + side - smaller, y * side + offset + side - smaller
+            return x * side + offset_x + smaller, y * side + offset_y + smaller, \
+                   x * side + offset_x + side - smaller, y * side + offset_y + side - smaller
         else:
-            return x * side + offset, y * side + offset, x * side + offset + side, y * side + offset + side
+            return x * side + offset_x, y * side + offset_y, x * side + offset_x + side, y * side + offset_y + side
 
     def start(self):
         self.root.mainloop()
@@ -372,7 +379,7 @@ class _DISP:
         if scheme == PixelType.UNKNOWN:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray55")
         elif scheme == PixelType.EXPLORED:
-            self.maze_canvas.itemconfigure(self.cells[x][y], fill="pink")
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="purple")
         elif scheme == PixelType.EMPTY:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray85")
         elif scheme == PixelType.WALL:
@@ -382,7 +389,7 @@ class _DISP:
         elif scheme == PixelType.EXIT:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="red")
         elif scheme == PixelType.PATH:
-            self.maze_canvas.itemconfigure(self.cells[x][y], fill="green")
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="green2")
 
     def update_score(self, score: int):
         self.maze_canvas.itemconfigure(self.score, text=score)
