@@ -374,16 +374,20 @@ class _DISP:
 
     def start(self):
         self.root.mainloop()
+        # https://github.com/python/cpython/issues/83274
+        import gc
+        gc.collect()
+        # The issue is caused by Python garbage collector
 
     def update(self, x: int, y: int, scheme: PixelType):
         if scheme == PixelType.UNKNOWN:
-            self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray55")
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray50")
         elif scheme == PixelType.EXPLORED:
-            self.maze_canvas.itemconfigure(self.cells[x][y], fill="purple")
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="forest green")
         elif scheme == PixelType.EMPTY:
-            self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray85")
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray90")
         elif scheme == PixelType.WALL:
-            self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray15")
+            self.maze_canvas.itemconfigure(self.cells[x][y], fill="gray10")
         elif scheme == PixelType.START:
             self.maze_canvas.itemconfigure(self.cells[x][y], fill="gold")
         elif scheme == PixelType.EXIT:
