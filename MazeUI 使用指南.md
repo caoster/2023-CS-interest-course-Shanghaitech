@@ -18,7 +18,7 @@ MazePlay()
 ## 接口调用规则
 
 `mazeUI`提供了`Maze`, `PixelType`, `MazePlay`三个类。
-一个函数`display_result`, 以及`WAIT`, `MASK`两项设置。
+一个函数`display_result`, 以及`WAIT`, `MASK`, `PERF`三项设置。
 
 ### `PixelType`
 
@@ -201,10 +201,18 @@ display_result()
 
 注意该设置项仅影响展示，对算法本身的逻辑没有任何影响。
 
+### `PERF`
+
+该变量默认为`False`。
+
+如果被设置为`True`，程序将以最快的方式运行，不会显示任何迷宫窗口。
+
+
 ### 如何调整设置
 ```python
 import mazeUI
 
 mazeUI.WAIT = False
 mazeUI.MASK = True
+mazeUI.PERF = True
 ```

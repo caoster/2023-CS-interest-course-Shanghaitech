@@ -8,10 +8,11 @@ from tkinter import Tk, Canvas
 
 WAIT = True
 MASK = False
+PERF = False
 
 
 def _optional_sleep():
-    if WAIT:
+    if WAIT and not PERF:
         time.sleep(0.05)
 
 
@@ -45,6 +46,9 @@ class _Record:
 
 
 def display_result():
+    if len(_Record.stats) == 0:
+        print("No record found!")
+        return
     print("----------------------------------------------------------")
     for _stat in _Record.stats:
         print(_stat)
@@ -212,10 +216,15 @@ class Maze:
             else:
                 print(f"Wrong Answer! Seed: {self._generator.seed}")
                 assert False
+            if PERF:
+                print(f"Seed: {self._generator.seed:>15}, Explore: {self._steps:>5}, Length: {self._path_len:>5}")
 
-        timer = threading.Timer(interval=1, function=run_function)
-        timer.start()
-        self._disp.start()
+        if PERF:
+            run_function()
+        else:
+            timer = threading.Thread(target=run_function)
+            self._disp.root.after(0, timer.start)
+            self._disp.start()
 
     def explore(self, x: int, y: int):
         _optional_sleep()
@@ -323,6 +332,8 @@ class Maze:
 class _DISP:
     def __init__(self, maze: Maze, size: tuple[int, int]):
         self.root = Tk(className="Maze")
+        if PERF:
+            self.root.withdraw()
         self.root.resizable(False, False)
         # self.root.bind("<Escape>", lambda _: self.root.destroy())
         self.root.geometry("850x450")
@@ -424,15 +435,20 @@ class _DISP:
 
 class MazePlay(Maze):
     def __init__(self, seed: int = 1234, size: tuple[int, int] = (49, 29)):
-        super().__init__(seed, size)
-        global WAIT
+        global WAIT, PERF
         self.prev_wait = WAIT
+        self.prev_perf = PERF
         WAIT = False
+        PERF = False
+        super().__init__(seed, size)
         self.person_pos = [0, 0]
         self.explore(0, 0)
         self._disp.bind_wasd()
+        self.start_time = time.time_ns()
+        self.first_finish = True
         self._disp.start()
         WAIT = self.prev_wait
+        PERF = self.prev_perf
 
     def _possible_position(self, x, y):
         if not (0 <= x < self._size[0] and 0 <= y < self._size[1]):
@@ -447,12 +463,18 @@ class MazePlay(Maze):
     def update_explores(self):
         self._disp.update_length(sum([sum(i) for i in self._explored]))
 
+    def _detect_finish(self):
+        if self.finish and self.first_finish:
+            self.first_finish = False
+            print(f"Time: {(time.time_ns() - self.start_time) / 1e9:.2f}s")
+
     def a(self, *_):
         if self._possible_position(self.person_pos[0] - 1, self.person_pos[1]):
             self.person_pos[0] -= 1
             self.explore(self.person_pos[0], self.person_pos[1])
             self._disp.update_person(self.person_pos[0], self.person_pos[1])
             self.update_explores()
+            self._detect_finish()
 
     def d(self, *_):
         if self._possible_position(self.person_pos[0] + 1, self.person_pos[1]):
@@ -460,6 +482,7 @@ class MazePlay(Maze):
             self.explore(self.person_pos[0], self.person_pos[1])
             self._disp.update_person(self.person_pos[0], self.person_pos[1])
             self.update_explores()
+            self._detect_finish()
 
     def s(self, *_):
         if self._possible_position(self.person_pos[0], self.person_pos[1] + 1):
@@ -467,6 +490,7 @@ class MazePlay(Maze):
             self.explore(self.person_pos[0], self.person_pos[1])
             self._disp.update_person(self.person_pos[0], self.person_pos[1])
             self.update_explores()
+            self._detect_finish()
 
     def w(self, *_):
         if self._possible_position(self.person_pos[0], self.person_pos[1] - 1):
@@ -474,6 +498,7 @@ class MazePlay(Maze):
             self.explore(self.person_pos[0], self.person_pos[1])
             self._disp.update_person(self.person_pos[0], self.person_pos[1])
             self.update_explores()
+            self._detect_finish()
 
     def display_all(self, *_):
         for x in range(self._size[0]):

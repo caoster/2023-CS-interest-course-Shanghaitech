@@ -2,15 +2,6 @@ import mazeUI
 from mazeUI import Maze, PixelType, display_result, MazePlay
 
 
-def strategy(maze: Maze):
-    x, y = maze.size
-    print(x, y)
-    for i in range(x):
-        for j in range(y):
-            print(maze.explore(i, j))
-    print("Finish")
-
-
 def dfs(maze: Maze):
     visited = []
     stack = []
@@ -53,11 +44,12 @@ def bfs(maze: Maze):
 
 mazeUI.WAIT = False
 mazeUI.MASK = True
-for i in range(5):
+mazeUI.PERF = True
+for i in range(50):
     maze = Maze(seed=i, size=(31, 7))
     maze.start(dfs)
     # maze.start(bfs)
 
 display_result()
 
-MazePlay()
+MazePlay(size=(31, 7))
