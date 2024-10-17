@@ -1,4 +1,4 @@
-import random
+import random, ast
 import treasureUI
 from treasureUI import PlayerAgent, PixelType, Treasure, TreasureReward, TreasurePlay, Level, display
 
@@ -192,11 +192,9 @@ class MinMaxAgent(PlayerAgent):
 class QLearningAgent(PlayerAgent):
 
     def __init__(self):
-        self.stepped = False
-        self.alpha = None
-        self.gamma = None
+        self.Q = None
 
-    def init(self, puzzle: Treasure):
+    def init_Q(self, puzzle: Treasure):
         assert len(puzzle.get_mobs_info()) == 1
         self.Q = {}
         road = []
@@ -213,21 +211,16 @@ class QLearningAgent(PlayerAgent):
                         self.Q[state][action] = 0.0
 
     def step(self, puzzle: Treasure):
-        if not self.stepped:
-            self.stepped = True
-            self.init(puzzle)
+        if self.Q is None:
+            self.init_Q(puzzle)
         mob = puzzle.get_mobs_info()[0]
         state = (puzzle.player, mob['location'])
-        Qmax_state = max(self.Q[state].values())
-        action_choices = []
-        for action in self.Q[state].keys():
-            if self.Q[state][action] == Qmax_state:
-                action_choices.append(action)
-        return random.choice(action_choices)
+        return max(self.Q[state].keys(), key=lambda action: self.Q[state][action])
 
     def reward(self, state, action, state_new, value):
-        sample = value + self.gamma * max(self.Q[state_new].values())
-        self.Q[state][action] += self.alpha * (sample - self.Q[state][action])
+        self.Q[state][action] =\
+            (1 - self.alpha) * self.Q[state][action] +\
+            self.alpha * (value + self.gamma * max(self.Q[state_new].values()))
 
     def train(self, n):
         treasureUI.DISP = False
@@ -249,23 +242,54 @@ class QLearningAgent(PlayerAgent):
             treasure = TreasureReward(seed=random.randint(0, 999999))
             treasure.start(self)
 
+    def test_stat(self, n):
+        treasureUI.DISP = False
+        treasureUI.WAIT = False
+        treasureUI.AUTO_CLOSE = True
+        self.alpha = 0.0
+        self.gamma = 0.0
+        treasureUI.clear()
+        for i in range(n):
+            treasure = TreasureReward(seed=random.randint(0, 999999))
+            treasure.start(self)
+        treasureUI.display()
 
+    def save_file(self, filename):
+        with open(filename, "w") as fp:
+            print(self.Q, file=fp)
+
+    def load_file(self, filename):
+        with open(filename, "r") as fp:
+            data = fp.read()
+        self.Q = ast.literal_eval(data)
+
+################# Day1 below #################
 # treasureUI.LEVEL = 1
 # for i in range(0, 3):
 #     Treasure(seed=i).start(DijkstraAgent())
+################# Day1 above #################
 
+################# Day2 below #################
 # treasureUI.LEVEL = 2
 # for i in range(0, 3):
 #     Treasure(seed=i).start(ExpDijkstraAgent())
+################# Day2 above #################
 
-treasureUI.LEVEL = 3
-treasureUI.DISP = True
-treasureUI.WAIT = True
-treasureUI.AUTO_CLOSE = True
-for i in range(0, 10):
-    Treasure(seed=i).start(MinMaxAgent())
-
+################# Day3 below #################
 # treasureUI.LEVEL = 3
-# agent = QLearningAgent()
-# agent.train(1000)
-# agent.test(10)
+# treasureUI.DISP = True
+# treasureUI.WAIT = True
+# treasureUI.AUTO_CLOSE = True
+# for i in range(0, 10):
+#     Treasure(seed=i).start(MinMaxAgent())
+################# Day3 above #################
+
+################# Day4 below #################
+treasureUI.LEVEL = 3
+agent = QLearningAgent()
+# agent.load_file('Q.txt')  # 可以从文件里读取之前训练好的Q值表，如果不读取就是从0开始
+agent.train(1000)  # 训练多少局游戏
+agent.save_file('Q.txt')  # 可以向文件输出现在Q值表，以便之后继续训练
+agent.test(10)  # 测试多少局游戏，展示游戏界面
+agent.test_stat(10)  # 测试多少局游戏，不展示游戏界面，但统计Cost的平均值
+################# Day4 above #################
