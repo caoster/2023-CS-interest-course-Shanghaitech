@@ -1,7 +1,6 @@
 import math
 import random
-from tkinter import Frame, Canvas, Tk
-from PIL import ImageTk, Image
+from tkinter import Frame, Canvas, Tk, PhotoImage
 from copy import deepcopy
 
 _COLOR = {0: "club", 1: "diamond", 2: "heart", 3: "spade"}
@@ -18,13 +17,10 @@ def _linspace(a, b, n):
 
 class _Texture:
     def __init__(self):
-        self._textures = {str(_EMPTY_CARD): ImageTk.PhotoImage(
-            Image.open(f"{_CARD_PATH}empty.png").resize((80, 115)))
-        }
+        self._textures = {str(_EMPTY_CARD): PhotoImage(file=f"{_CARD_PATH}empty.png").subsample(4, 4)}
         for i in range(4):
             for j in range(2, 15):
-                self._textures[f"{_CARD_PATH}{_COLOR[i]}_{j}.png"] = ImageTk.PhotoImage(
-                    Image.open(f"{_CARD_PATH}{_COLOR[i]}_{j}.png").resize((80, 115)))
+                self._textures[f"{_CARD_PATH}{_COLOR[i]}_{j}.png"] = PhotoImage(file=f"{_CARD_PATH}{_COLOR[i]}_{j}.png").subsample(4, 4)
 
     def __getitem__(self, item):
         return self._textures[item]
@@ -58,16 +54,15 @@ class _DISP:
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>^")
         self.root = Tk(className="Cards")
         self.root.resizable(False, False)
-        # self.root.bind("<Escape>", lambda _: self.root.destroy())
         self.frame = Frame(self.root)
         self.frame.pack()
         self.root.geometry("800x450")
 
         self.canvas = Canvas(self.frame, bg="black", width=800, height=450)
 
-        self.background = ImageTk.PhotoImage(Image.open(f"{_CARD_PATH}background.jpg"))
-        self.check = ImageTk.PhotoImage(Image.open(f"{_CARD_PATH}check.png").resize((70, 70)))
-        self.cross = ImageTk.PhotoImage(Image.open(f"{_CARD_PATH}cross.png").resize((70, 70)))
+        self.background = PhotoImage(file=f"{_CARD_PATH}background.png")
+        self.check = PhotoImage(file=f"{_CARD_PATH}check.png").subsample(5, 5)
+        self.cross = PhotoImage(file=f"{_CARD_PATH}cross.png").subsample(5, 5)
         self.canvas.create_image(800 / 2, 450 / 2, image=self.background, tags="bg")
         self.canvas.pack()
         self.textures = _Texture()
