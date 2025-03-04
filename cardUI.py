@@ -1,50 +1,27 @@
 import math
 import random
 from tkinter import Frame, Canvas, Tk, PhotoImage
+from imgs import imgs
 from copy import deepcopy
 
 _COLOR = {0: "club", 1: "diamond", 2: "heart", 3: "spade"}
-_CARD_PATH = "imgs/"
 # Random number that stands for empty
 _EMPTY_CARD = random.randint(0x3b0a73, 0x649168c2a) + 0x6abc5826
 
 
-def _linspace(a, b, n):
-    if n == 1:
-        return [(a + b) / 2]
-    return [(float(b) - a) / (n - 1) * i + a for i in range(n)]
-
-
 class _Texture:
     def __init__(self):
-        self._textures = {str(_EMPTY_CARD): PhotoImage(file=f"{_CARD_PATH}empty.png").subsample(4, 4)}
+        # Process the image
+        for img_name, img in imgs.items():
+            imgs[img_name] = PhotoImage(data=img)
+
+        self._textures = {str(_EMPTY_CARD): imgs["empty.png"]}
         for i in range(4):
             for j in range(2, 15):
-                self._textures[f"{_CARD_PATH}{_COLOR[i]}_{j}.png"] = PhotoImage(file=f"{_CARD_PATH}{_COLOR[i]}_{j}.png").subsample(4, 4)
+                self._textures[f"{_COLOR[i]}_{j}.png"] = imgs[f"{_COLOR[i]}_{j}.png"]
 
     def __getitem__(self, item):
         return self._textures[item]
-
-
-def _get_card_image_path(card_name: list[int] | int) -> str | None:
-    if card_name == _EMPTY_CARD:
-        return str(_EMPTY_CARD)
-    if type(card_name) == int:
-        if card_name > 14 or card_name < 2:
-            print("卡牌必须是[2, 14]中的整数")
-            return None
-        return f"{_CARD_PATH}heart_{card_name}.png"
-    else:  # type(card_name) == list[int]
-        if len(card_name) != 2 or type(card_name[0]) != int or type(card_name[1]) != int:
-            print(f"{card_name} 无法表示有效的卡牌")
-            return None
-        if card_name[0] > 14 or card_name[0] < 2:
-            print("卡牌必须是[2, 14]中的整数")
-            return None
-        if card_name[1] not in _COLOR:
-            print("花色必须是[0, 3]中的整数")
-            return None
-        return f"{_CARD_PATH}{_COLOR[card_name[1]]}_{card_name[0]}.png"
 
 
 class _DISP:
@@ -58,14 +35,16 @@ class _DISP:
         self.frame.pack()
         self.root.geometry("800x450")
 
+        # Must be initialized after the root is created
+        self.textures = _Texture()
+
         self.canvas = Canvas(self.frame, bg="black", width=800, height=450)
 
-        self.background = PhotoImage(file=f"{_CARD_PATH}background.png")
-        self.check = PhotoImage(file=f"{_CARD_PATH}check.png").subsample(5, 5)
-        self.cross = PhotoImage(file=f"{_CARD_PATH}cross.png").subsample(5, 5)
+        self.background = imgs["background.png"]
+        self.check = imgs["check.png"]
+        self.cross = imgs["cross.png"]
         self.canvas.create_image(800 / 2, 450 / 2, image=self.background, tags="bg")
         self.canvas.pack()
-        self.textures = _Texture()
 
         self.new_card_func = None
         self.sort_card_func = None
@@ -89,6 +68,33 @@ class _DISP:
     def __del__(self):
         if not self.started:
             input("Press enter to exit.")
+
+    @staticmethod
+    def _linspace(a, b, n):
+        if n == 1:
+            return [(a + b) / 2]
+        return [(float(b) - a) / (n - 1) * i + a for i in range(n)]
+
+    @staticmethod
+    def _get_card_image_path(card_name: list[int] | int) -> str | None:
+        if card_name == _EMPTY_CARD:
+            return str(_EMPTY_CARD)
+        if type(card_name) == int:
+            if card_name > 14 or card_name < 2:
+                print("卡牌必须是[2, 14]中的整数")
+                return None
+            return f"heart_{card_name}.png"
+        else:  # type(card_name) == list[int]
+            if len(card_name) != 2 or type(card_name[0]) != int or type(card_name[1]) != int:
+                print(f"{card_name} 无法表示有效的卡牌")
+                return None
+            if card_name[0] > 14 or card_name[0] < 2:
+                print("卡牌必须是[2, 14]中的整数")
+                return None
+            if card_name[1] not in _COLOR:
+                print("花色必须是[0, 3]中的整数")
+                return None
+            return f"{_COLOR[card_name[1]]}_{card_name[0]}.png"
 
     def _get_best_size(self, num: int):
         if self.started:
@@ -119,13 +125,13 @@ class _DISP:
         self.canvas.delete(f"card_{loc}")
         start_x, end_x, start_y, end_y = self._get_seg_loc(loc)
         x, y = self._get_best_size(len(args_list))
-        offset_x = _linspace(start_x, end_x, x)
-        offset_y = _linspace(start_y, end_y, y)
+        offset_x = _DISP._linspace(start_x, end_x, x)
+        offset_y = _DISP._linspace(start_y, end_y, y)
         all_index = tuple((x, y) for y in offset_y for x in offset_x)
         for idx, arg in enumerate(args_list):
-            if _get_card_image_path(arg) is not None:
+            if _DISP._get_card_image_path(arg) is not None:
                 self.canvas.create_image(all_index[idx][0], all_index[idx][1],
-                                         image=self.textures[_get_card_image_path(arg)],
+                                         image=self.textures[_DISP._get_card_image_path(arg)],
                                          tags=f"card_{loc}",
                                          anchor="n")
             else:
@@ -220,10 +226,10 @@ class _DISP:
             return
         for i in cards:
             self.canvas.delete(f"card_{i[0]}_{i[1]}")
-        pos = _linspace(300, 500, len(cards))
+        pos = _DISP._linspace(300, 500, len(cards))
         for idx, card in enumerate(cards):
             self.canvas.create_image(pos[idx], 160,
-                                     image=self.textures[_get_card_image_path(card)],
+                                     image=self.textures[_DISP._get_card_image_path(card)],
                                      tags=f"card_{card[0]}_{card[1]}",
                                      anchor="nw")
 
@@ -237,16 +243,16 @@ class _DISP:
                 for j in range(0, 4):
                     self.canvas.delete(f"card_{i}_{j}")
 
-            pos = _linspace(120, 700, len(self.player1))
+            pos = _DISP._linspace(120, 700, len(self.player1))
             for idx, card in enumerate(self.player1):
                 self.canvas.create_image(pos[idx], 310,
-                                         image=self.textures[_get_card_image_path(card)],
+                                         image=self.textures[_DISP._get_card_image_path(card)],
                                          tags=f"card_{card[0]}_{card[1]}",
                                          anchor="nw")
-            _linspace(120, 300, len(self.player2))
+            _DISP._linspace(120, 300, len(self.player2))
             for idx, card in enumerate(self.player2):
                 self.canvas.create_image(pos[idx], 30,
-                                         image=self.textures[_get_card_image_path(card)],
+                                         image=self.textures[_DISP._get_card_image_path(card)],
                                          tags=f"card_{card[0]}_{card[1]}",
                                          anchor="nw")
             self.gameInit = True
